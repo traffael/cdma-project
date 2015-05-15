@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svn/tclpublications/!svn/ver/5923/Teaching/AdvancedWirelessII_SS13/exercise/06_MIMORECEIVER/MATLAB/NB_MIMO_Simulation_GUI/Receivers
+END
+SIC_Detector.m
+K 25
+svn:wc:ra_dav:version-url
+V 147
+/svn/tclpublications/!svn/ver/5923/Teaching/AdvancedWirelessII_SS13/exercise/06_MIMORECEIVER/MATLAB/NB_MIMO_Simulation_GUI/Receivers/SIC_Detector.m
+END
+ZF_Detector.m
+K 25
+svn:wc:ra_dav:version-url
+V 146
+/svn/tclpublications/!svn/ver/5923/Teaching/AdvancedWirelessII_SS13/exercise/06_MIMORECEIVER/MATLAB/NB_MIMO_Simulation_GUI/Receivers/ZF_Detector.m
+END
+MMSE_Detector_Biased.m
+K 25
+svn:wc:ra_dav:version-url
+V 155
+/svn/tclpublications/!svn/ver/5923/Teaching/AdvancedWirelessII_SS13/exercise/06_MIMORECEIVER/MATLAB/NB_MIMO_Simulation_GUI/Receivers/MMSE_Detector_Biased.m
+END
