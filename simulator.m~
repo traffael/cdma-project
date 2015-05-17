@@ -7,90 +7,60 @@
 
 
 function BER = simulator(P)
-
-K = 9;
-poly = [753 561];
-convEnc = comm.ConvolutionalEncoder;
-convDec = comm.ViterbiDecoder;
-convEnc.PuncturePatternSource = 'Property';
-delay = convDec.TracebackDepth*log2(convDec.TrellisStructure.numInputSymbols);
-convEnc.PuncturePattern = [1 ;1 ;0 ;1]; 
-
-
 SeqLen          = length(P.Sequence);
 SpreadSequence  = sqrt(1/(sum(P.Sequence.^2))) * P.Sequence(:); % power normalization
-NumberOfChips   = P.NumberOfSymbols*P.Modulation*SeqLen; % per Frame
-
-
 
 % Coding
-switch P.CodingType
-    case 'None',
-        NumberOfBits = P.NumberOfSymbols*P.Modulation; % per Frame
-    otherwise,
-        disp('Source Encoding not supported')
-end
+%switch P.CodingType
+%    case 'None',
+%        NumberOfBits = P.NumberOfSymbols*P.Modulation; % per Frame
+%    otherwise,
+%        disp('Source Encoding not supported')
+%end
 
-NumberOfChipsRX = NumberOfChips;
 % Channel
-switch P.ChannelType
-    case 'Multipath',
-        NumberOfChipsRX   = NumberOfChips+P.ChannelLength-1;       
-end
+%switch P.ChannelType
+%    case 'Multipath',
+%        NumberOfChipsRX   = NumberOfChips+P.ChannelLength-1;       
+%end
 
 Results = zeros(1,length(P.SNRRange));
 
-for ii = 1:P.NumberOfFrames/20
-    ii
+for ii = 1:20
+
+%%-------------------------------------------------------------------------     
     % Coding
-    bits = randi([0 1],1,NumberOfBits); % Random Data
+    %bits = randi([0 1],1,P.NumberOfBits); % Random Data
+    bits = ones(1,P.NumberOfBits);
     bits_tail = add_enc_tail(bits); % adding a tail
-    c = step(convEnc, bits_tail);  %convolutional encoding
+    c = conv_enc(bits_tail);  %convolutional encoding
+    %????
+    mwaveform = c;
     
-    
-    
-    
-    
-    
-    
-    
-    % Pulse Shape
-    waveform = SpreadSequence*symbols;
-    
-    % Reshape to add multi RX antenna suppport
-    waveform  = reshape(waveform,1,NumberOfChips);
-    mwaveform = zeros(1,NumberOfChips,0);
-    for i=1:P.RX
-        mwaveform = cat(3,mwaveform,waveform);
-    end
-    
+%%-------------------------------------------------------------------------    
     % Channel
     switch P.ChannelType
         case 'AWGN',
-            h = ones(1,NumberOfChips,P.RX);
-            %P.SNRRange = EbN0shift(P);
+            h = ones(1,length(mwaveform),P.RX);
         case 'Fading',
-            h = channel(P.RX,NumberOfChips,1,P.CoherenceTime,1);
+            h = channel(P.RX,length(mwaveform),1,P.CoherenceTime,1);
         case 'Multipath',
-            himp = sqrt(1/2)* ( randn(1,P.ChannelLength) + 1i * randn(1,P.ChannelLength) );
-            h = himp(1)*ones(1,NumberOfChipsRX,P.RX);
-            %P.SNRRange = EbN0shift(P);
+            himp = sqrt(1/2)* ( randn(1,length(mwaveform)) + 1i * randn(1,length(mwaveform)) ); % channel has imaginary stuff?
+            h = himp(1)*ones(1,P.NumberOfBits,P.RX);
         otherwise,
             disp('Channel not supported')
     end
     
-    %%%
+%%------------------------------------------------------------------------- 
     % Simulation
-  
-    % SNR Range
     for ss = 1:length(P.SNRRange)
-        SNRdb  = P.SNRRange(ss) ;%
+        SNRdb  = P.SNRRange(ss);
         SNRlin = 10^(SNRdb/10);
-        noise  = 1/sqrt(2*SeqLen*SNRlin) *( randn(1,NumberOfChipsRX,P.RX) + 1i* randn(1,NumberOfChipsRX,P.RX) );
+        noise  = 1/sqrt(2*SNRlin) *( randn(1,length(mwaveform),P.RX) + 1i* randn(1,length(mwaveform),P.RX) );
         % Channel
         switch P.ChannelType
             case 'AWGN',
-                y = mwaveform + noise;
+                y = mwaveform;% + noise';
             case 'Fading',
                 y = mwaveform .* h + noise;
             case 'Multipath'
@@ -100,22 +70,14 @@ for ii = 1:P.NumberOfFrames/20
         end
         
  
+        
+%%-------------------------------------------------------------------------         
         % Receiver
         switch P.ReceiverType
             case 'Simple',
-                rxsymbols = y.*conj(sign(h)); % phase correction
-                rxbits = reshape(rxsymbols < 0,1,P.NumberOfSymbols);
-            case 'Correlator',
-                rssum = zeros(1000,1);
-                rxsymbols = y.*conj(sign(h)); % phase correction
-                rxsymbols = reshape(rxsymbols,length(P.Sequence),1000);
-                for i = 1:1000
-                    for j= 1 : length(P.Sequence)
-                         rssum(i) = rssum(i)+rxsymbols(j,i)*conj(sign(SpreadSequence(j)));
-                    end;
-                end;
-                rssum = rssum./ length(P.Sequence);
-                rxbits = reshape(rssum < 0,1,P.NumberOfSymbols);
+                x_hat_soft = y;
+                b_hat = conv_dec(x_hat_soft);
+                
             case 'Rake',
                 rxsymbols = y.*conj(sign(h));
                 x = P.RakeFingers;

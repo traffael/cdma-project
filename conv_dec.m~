@@ -1,0 +1,15 @@
+function P_conv = conv_dec(P)
+    K = 9;
+    %poly = [753 561];
+    poly = [557 663 711];
+    convDec = comm.ViterbiDecoder('TrellisStructure', poly2trellis(K,poly)); 
+    delay = convDec.TracebackDepth*log2(convDec.TrellisStructure.numInputSymbols);
+    %convDec.PuncturePatternSource = 'Property';
+    %convDec.PuncturePattern = [1 ;1 ;1 ;1; 1; 1]; % speed 1/3
+    %P_new = [P; zeros(2*delay,1)];
+    %b_hat = step(convDec, [P_new; zeros(sum(convDec.PuncturePattern)*delay,1)]);
+    %b_hat = step(convDec, [P; zeros(2*delay,1)]);
+    b_hat = step(convDec, [P; zeros(sum(convDec.PuncturePattern)*delay,1)]);
+    P_conv = b_hat(delay+1:delay+K);
+    %P_conv = b_hat(delay+1:(end-(sum(convDec.PuncturePattern)-2)*delay));
+end
