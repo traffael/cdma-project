@@ -11,7 +11,7 @@ P.NumberOfSymbols     = 1000;
 
 P.CoherenceTime       = 100;
 
-P.CodingType    = 'None';
+P .CodingType    = 'None';
 P.Modulation    = 1;        % 1: BPSK
 P.ChannelType   = 'AWGN'; % 'AWGN', 'Fading','Multipath'
 

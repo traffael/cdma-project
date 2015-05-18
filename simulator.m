@@ -34,8 +34,11 @@ for ii = 1:20
     bits = ones(1,P.NumberOfBits);
     bits_tail = add_enc_tail(bits); % adding a tail
     c = conv_enc(bits_tail);  %convolutional encoding
-    %????
-    mwaveform = c;
+    
+    
+%%-------------------------------------------------------------------------
+    % Orthogonal modulation
+    mwaveform = orthogonalModulation(c);
     
 %%-------------------------------------------------------------------------    
     % Channel

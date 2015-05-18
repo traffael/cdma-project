@@ -22,4 +22,5 @@ for i=1:RX
     grid(fborder+1,:,i) = 1/sqrt(vraw)*lraw;
 end
 
+
 h = grid(fborder+1:end-fborder,tborder+1:end-tborder,:);
