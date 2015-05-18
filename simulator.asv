@@ -39,9 +39,9 @@ for ii = 1:20
 %%-------------------------------------------------------------------------
     % Orthogonal modulation
     %mwaveform = orthogonalModulation(c);
-    mwaveform=c;
+    mw
     
-    mwaveform = 1-2*mwaveform ;
+    mwaveform = 2*mwaveform - 1;
 %%-------------------------------------------------------------------------    
     % Channel
     switch P.ChannelType
@@ -112,7 +112,7 @@ for ii = 1:20
         % Orthogonal demodulation
         
         %demodwaveform = orthogonalDemodulation(x_hat);        
-        demodwaveform = x_hat;
+        
 %%------------------------------------------------------------------------- 
         % conv. Decoder
         rxbits = conv_dec(demodwaveform,length(bits_tail));
