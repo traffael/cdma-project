@@ -7,31 +7,15 @@
 
 
 function BER = simulator(P)
-SeqLen          = length(P.Sequence);
-SpreadSequence  = sqrt(1/(sum(P.Sequence.^2))) * P.Sequence(:); % power normalization
-
-% Coding
-%switch P.CodingType
-%    case 'None',
-%        NumberOfBits = P.NumberOfSymbols*P.Modulation; % per Frame
-%    otherwise,
-%        disp('Source Encoding not supported')
-%end
-
-% Channel
-%switch P.ChannelType
-%    case 'Multipath',
-%        NumberOfChipsRX   = NumberOfChips+P.ChannelLength-1;       
-%end
 
 Results = zeros(1,length(P.SNRRange));
-
-for ii = 1:20
-
+N = 24576;
+for ii = 1:1
+    ii
 %%-------------------------------------------------------------------------     
     % Coding
     %bits = randi([0 1],1,P.NumberOfBits); % Random Data
-    bits = ones(1,P.NumberOfBits);
+    bits = randi([0,1],1,P.NumberOfBits);
     bits_tail = add_enc_tail(bits); % adding a tail
     c = conv_enc(bits_tail);  %convolutional encoding
 %%-------------------------------------------------------------------------
@@ -44,8 +28,8 @@ for ii = 1:20
     % Spreading match filter  
     mwaveform=spread_match_filter(c_mult);
     
-    mwaveform = 1-2*mwaveform ;
-%%-------------------------------------------------------------------------    
+    %mwaveform = 1-2*mwaveform ;
+%%------------------------------------------------------------------------- 
     % Channel
     switch P.ChannelType
         case 'AWGN',
@@ -53,8 +37,10 @@ for ii = 1:20
         case 'Fading',
             h = channel(P.RX,length(mwaveform),1,P.CoherenceTime,1);
         case 'Multipath',
-            himp = sqrt(1/2)* ( randn(1,length(mwaveform)) + 1i * randn(1,length(mwaveform)) ); % channel has imaginary stuff?
-            h = himp(1)*ones(1,P.NumberOfBits,P.RX);
+            NumberOfBitsRX   = length(mwaveform)+P.ChannelLength-1;
+            himp = sqrt(1/2)* ( randn(1,P.ChannelLength) + 1i * randn(1,P.ChannelLength) ); % channel has imaginary stuff?
+            h = himp(1)*ones(1,NumberOfBitsRX,P.RX);
+            
         otherwise,
             disp('Channel not supported')
     end
@@ -62,17 +48,18 @@ for ii = 1:20
 %%------------------------------------------------------------------------- 
     % Simulation
     for ss = 1:length(P.SNRRange)
+        ss
         SNRdb  = P.SNRRange(ss);
         SNRlin = 10^(SNRdb/10);
-        noise  = 1/sqrt(2*SNRlin) *( randn(1,length(mwaveform),P.RX) + 1i* randn(1,length(mwaveform),P.RX) );
+        noise  = 1/sqrt(2*SNRlin) *( randn(1,NumberOfBitsRX,P.RX) + 1i* randn(1,NumberOfBitsRX,P.RX) );
         % Channel
         switch P.ChannelType
             case 'AWGN',
-                y = mwaveform + noise';
+                y = mwaveform;% + noise';
             case 'Fading',
                 y = mwaveform .* h + noise;
             case 'Multipath'
-                y = conv(mwaveform,himp) + noise;
+                y = conv(mwaveform,himp) + noise';
             otherwise,
                 disp('Channel not supported')
         end
@@ -88,26 +75,32 @@ for ii = 1:20
             case 'Rake',
                 rxsymbols=zeros(24576,1);
                 for f=1:P.RakeFingers
-                    ycrop=y(f:24576*length(P.Sequence)+f-1);
-                    yresh=(reshape(ycrop,length(P.Sequence),24576)).';
-                    rxsymbols= rxsymbols+(yresh*conj(P.Sequence).')*conj(himp(f));
+                    ycrop = y(f:N+f-1);
+                    rxsymbols = rxsymbols+ycrop*conj(himp(f));
                 end
-                rxbits_despread = reshape(rxsymbols(1:P.NumberOfSymbols) < 0,1,P.NumberOfSymbols);
+                x_hat = reshape(rxsymbols(1:N) < 0,1,N);
             otherwise,
                 disp('Source Encoding not supported')
         end
           
 %%-------------------------------------------------------------------------
+        rxbits_despread=despread_match_filter(x_hat);
+        sum1 = sum(rxbits_despread ~= c_mult');
         % Orthogonal demodulation
         rxbits_demodul = demult4(rxbits_despread);
-        demodwaveform = orthogonalDemodulation(rxbits_demodul);        
-        demodwaveform1 = x_hat;
+        sum2 = sum(rxbits_demodul ~= c_ortogonal');
+        demodwaveform = orthogonalDemodulation(rxbits_demodul);  
+        sum3 = sum(demodwaveform ~= c);      
+        %demodwaveform1 = x_hat;
+        
+        deconvwaveform = 1-2*demodwaveform ;
         
 %%------------------------------------------------------------------------- 
         % conv. Decoder
-        rxbits = conv_dec(demodwaveform1,length(bits_tail));
+        rxbits = conv_dec(deconvwaveform,length(bits_tail));
         % BER count
-        errors =  sum(rxbits ~= bits_tail');
+        rxbits = rxbits(1:P.NumberOfBits);
+        errors =  sum(rxbits ~= bits');
         
         Results(ss) = Results(ss) + errors;
         

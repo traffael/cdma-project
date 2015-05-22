@@ -1,8 +1,7 @@
-function P_spread = spread_match_filter(P)
+function P_despread = despread_match_filter(P)
     %P = ones(256,96);
     P = reshape(P,256,96);
-    P_spread = zeros(size(P));
-    %P_despread = zeros(size(P));
+    P_despread = zeros(size(P));
     ESN = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
     Public_log_code_mask = [ESN 0 0 0 1 1 0 0 0 1 1];  
     Initial_state = [1; zeros(41,1)];
@@ -17,8 +16,8 @@ function P_spread = spread_match_filter(P)
             Initial_state = [Initial_state(42); Initial_state(1:41)];
             % Multiplying with spreading sequence 
         end
-        P_spread(:,j) = xor(Long_code,P(:,j));
+        P_despread(:,j) = xor(Long_code,P(:,j));
     end;
     %error = sum(sum(P_despread ~= P));
-    P_spread = reshape(P_spread,256*96,1);
+    P_despread = reshape(P_despread,256*96,1);
 end
