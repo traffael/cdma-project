@@ -12,8 +12,8 @@ function P_despread = despread_match_filter(P)
             if Initial_state(42) == 1
                 Initial_state = xor(Initial_state, Polinomial');
             end;
+            Initial_state = [Initial_state(42); Initial_state(1:41)]; %modification: do this before next line
             Long_code(i) = mod(sum(Initial_state.*Public_log_code_mask'),2);
-            Initial_state = [Initial_state(42); Initial_state(1:41)];
             % Multiplying with spreading sequence 
         end
         P_despread(:,j) = xor(Long_code,P(:,j));

@@ -52,7 +52,7 @@ for ii = 1:1
         ss
         SNRdb  = P.SNRRange(ss);
         SNRlin = 10^(SNRdb/10);
-        noise  = 1/sqrt(2*SNRlin) *( randn(1,NumberOfBitsRX,P.RX) + 1i* randn(1,NumberOfBitsRX,P.RX) );
+        noise  = 1/sqrt(SNRlin) *( randn(1,NumberOfBitsRX,P.RX) );
         % Channel
         switch P.ChannelType
             case 'AWGN',
@@ -72,7 +72,7 @@ for ii = 1:1
         % what is P.sequence ? 
         switch P.ReceiverType
             case 'Simple',
-                x_hat = (real(y)<0);                
+                x_hat = y;                
             case 'Rake',
                 rxsymbols=zeros(24576,1);
                 for f=1:P.RakeFingers
