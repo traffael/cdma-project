@@ -13,10 +13,11 @@ P.CodingType    = 'None';
 P.Modulation    = 1;        % 1: BPSK
 P.ChannelType   = 'Multipath'; % 'AWGN', 'Fading'
 P.ChannelLength = 3;
+P.NumberOfFrames  = 10;
 
 P.RX = 1; % Number of RX antennas
 
-P.SNRRange = -20:20; % SNR Range to simulate in dB
+P.SNRRange = -12:2:10; % SNR Range to simulate in dB
 
 P.ReceiverType  = 'Rake';
 

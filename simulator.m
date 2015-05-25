@@ -10,7 +10,7 @@ function BER = simulator(P)
 
 Results = zeros(1,length(P.SNRRange));
 N = 24576;
-for ii = 1:1
+for ii = 1:P.NumberOfFrames
     ii
 %%-------------------------------------------------------------------------     
     % Coding
@@ -52,7 +52,7 @@ for ii = 1:1
         ss
         SNRdb  = P.SNRRange(ss);
         SNRlin = 10^(SNRdb/10);
-        noise  = 1/sqrt(2*SNRlin) *( randn(1,NumberOfBitsRX,P.RX) + 1i* randn(1,NumberOfBitsRX,P.RX) );
+        noise  = 1/sqrt(2*SNRlin) *(randn(1,NumberOfBitsRX,P.RX) + 1i* randn(1,NumberOfBitsRX,P.RX) );
         % Channel
         switch P.ChannelType
             case 'AWGN',
@@ -110,8 +110,8 @@ for ii = 1:1
     end
 end
 
-%BER = Results/(P.NumberOfBits*P.NumberOfFrames);
-BER = Results/(P.NumberOfBits);
+BER = Results/(P.NumberOfBits*P.NumberOfFrames);
+%BER = Results/(P.NumberOfBits);
 
 
 

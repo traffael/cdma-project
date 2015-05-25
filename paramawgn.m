@@ -12,6 +12,7 @@ P.CodingType    = 'None';
 P.Modulation    = 1;      % 1: BPSK
 P.ChannelType   = 'AWGN'; % 'AWGN', 'Fading'
 P.ReceiverType  = 'Simple';
+P.NumberOfFrames  = 20;
 
 P.RX = 1; % Number of RX antennas
 
