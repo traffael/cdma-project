@@ -14,7 +14,7 @@ P.ChannelType   = 'AWGN'; % 'AWGN', 'Fading'
 P.ReceiverType  = 'Simple';
 P.NumberOfFrames  = 20;
 P.Long_code = Long_code();
-
+P.Sequence = [1]; % chip sequence
 P.RX = 1; % Number of RX antennas
 
 P.Sequence = [1]; % chip sequence

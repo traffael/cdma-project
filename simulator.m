@@ -7,10 +7,13 @@
 
 
 function BER = simulator(P)
+SeqLen          = length(P.Sequence);
+SpreadSequence  = sqrt(1/(sum(P.Sequence.^2))) * P.Sequence(:);
+NumberOfChips   = P.Modulation*SeqLen; % per Frame
 
 Results = zeros(1,length(P.SNRRange));
 N = 24576;
-for ii = 1:P.NumberOfFrames
+for ii = 1:4 %P.NumberOfFrames
     ii
 %%-------------------------------------------------------------------------     
     % Coding
@@ -28,7 +31,17 @@ for ii = 1:P.NumberOfFrames
     % Spreading match filter  
     mwaveform=spread_match_filter(c_mult,P.Long_code);
     
-    mwaveform = 1-2*mwaveform ;
+    mod_waveform = 1-2*mwaveform ;
+    
+    waveform = SpreadSequence*mod_waveform';
+    L_spread = length(mod_waveform)*length(SpreadSequence);
+    waveform  = reshape(waveform,1,L_spread);
+    mmwaveform = zeros(1,L_spread,0);
+    for i=1:P.RX
+        mmmwaveform = cat(3,mmwaveform,waveform);
+    end
+    
+    
 %%------------------------------------------------------------------------- 
     % Channel
     switch P.ChannelType
@@ -38,7 +51,7 @@ for ii = 1:P.NumberOfFrames
         case 'Fading',
             h = channel(P.RX,length(mwaveform),1,P.CoherenceTime,1);
         case 'Multipath',
-            NumberOfBitsRX   = length(mwaveform)+P.ChannelLength-1;
+            NumberOfBitsRX   = L_spread+P.ChannelLength-1;
             himp = sqrt(1/2)* ( randn(1,P.ChannelLength) + 1i * randn(1,P.ChannelLength) ); % channel has imaginary stuff?
             h = himp(1)*ones(1,NumberOfBitsRX,P.RX);
             
@@ -60,7 +73,7 @@ for ii = 1:P.NumberOfFrames
             case 'Fading',
                 y = mwaveform .* h + noise;
             case 'Multipath'
-                y = conv(mwaveform,himp) + noise';
+                y = conv(mmmwaveform,himp) + noise;
             otherwise,
                 disp('Channel not supported')
         end
@@ -74,12 +87,14 @@ for ii = 1:P.NumberOfFrames
             case 'Simple',
                 x_hat = (real(y)<0);                
             case 'Rake',
-                rxsymbols=zeros(24576,1);
+                rxsymbols=zeros(length(mwaveform),1);
                 for f=1:P.RakeFingers
-                    ycrop = y(f:N+f-1);
-                    rxsymbols = rxsymbols+ycrop*conj(himp(f));
+                    ycrop=y(f:L_spread+f-1);
+                    yresh=(reshape(ycrop,length(P.Sequence),length(mwaveform))).';
+                    
+                    rxsymbols= rxsymbols+(yresh*conj(P.Sequence).')*conj(himp(f));
                 end
-                x_hat = reshape(rxsymbols(1:N) < 0,1,N);
+                x_hat = reshape(rxsymbols(1:length(mwaveform)) < 0,1,length(mwaveform));
             otherwise,
                 disp('Source Encoding not supported')
         end

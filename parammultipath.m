@@ -15,6 +15,7 @@ P.ChannelType   = 'Multipath'; % 'AWGN', 'Fading'
 P.ChannelLength = 4;
 P.NumberOfFrames  = 3;
 P.Long_code = Long_code();
+P.Sequence = [1 1 1 -1 -1 1 -1 ];
 
 P.RX = 1; % Number of RX antennas
 
