@@ -56,7 +56,7 @@ for ii = 1:P.NumberOfFrames
         % Channel
         switch P.ChannelType
             case 'AWGN',
-                y = mwaveform + noise';
+                y = mwaveform; % + noise';
             case 'Fading',
                 y = mwaveform .* h + noise;
             case 'Multipath'
