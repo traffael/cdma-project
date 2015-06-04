@@ -91,7 +91,6 @@ for ii = 1:4 %P.NumberOfFrames
                 for f=1:P.RakeFingers
                     ycrop=y(f:L_spread+f-1);
                     yresh=(reshape(ycrop,length(P.Sequence),length(mwaveform))).';
-                    
                     rxsymbols= rxsymbols+(yresh*conj(P.Sequence).')*conj(himp(f));
                 end
                 x_hat = reshape(rxsymbols(1:length(mwaveform)) < 0,1,length(mwaveform));
@@ -106,16 +105,13 @@ for ii = 1:4 %P.NumberOfFrames
         rxbits_demult = demult4(rxbits_despread);
         sum2 = sum(rxbits_demult ~= c_ortogonal');
         % Orthogonal demodulation
-        rxsymbols_demul=1-2*rxbits_demult;
-        demodwaveform = orthogonalDemodulation(rxsymbols_demul);  
+        demodwaveform = orthogonalDemodulation(rxbits_demult);  
         sum3 = sum(demodwaveform ~= c);      
         %demodwaveform1 = x_hat;
         
-        deconvwaveform = 1-2*demodwaveform ;
-        
 %%------------------------------------------------------------------------- 
         % conv. Decoder
-        rxbits = conv_dec(deconvwaveform,length(bits_tail));
+        rxbits = conv_dec(demodwaveform,length(bits_tail));
         % BER count
         rxbits = rxbits(1:P.NumberOfBits);
         errors =  sum(rxbits ~= bits');

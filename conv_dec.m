@@ -1,6 +1,4 @@
 function P_conv = conv_dec(P,k)
-
-    P=P*2-1;
     K = 9;
     speed = 1/3;
     poly = [557 663 711];
