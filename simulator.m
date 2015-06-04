@@ -13,7 +13,7 @@ NumberOfChips   = P.Modulation*SeqLen; % per Frame
 
 Results = zeros(1,length(P.SNRRange));
 N = 24576;
-for ii = 1:4 %P.NumberOfFrames
+for ii = 1:P.NumberOfFrames
     ii
 %%-------------------------------------------------------------------------     
     % Coding
@@ -53,6 +53,7 @@ for ii = 1:4 %P.NumberOfFrames
         case 'Multipath',
             NumberOfBitsRX   = L_spread+P.ChannelLength-1;
             himp = sqrt(1/2)* ( randn(1,P.ChannelLength) + 1i * randn(1,P.ChannelLength) ); % channel has imaginary stuff?
+            himp = himp/norm(himp); %%normalize channel taps.
             h = himp(1)*ones(1,NumberOfBitsRX,P.RX);
             
         otherwise,
