@@ -7,7 +7,7 @@
 
 
 function BER = simulator(P)
-SeqLen          = length(P.Sequence);
+SeqLen = length(P.Sequence);
 for i_antenna = 1:P.RX
     SpreadSequence(i_antenna,:)  = sqrt(1/(sum(P.Sequence(i_antenna,:).^2))) * P.Sequence(i_antenna,:);
 end
@@ -20,14 +20,14 @@ for ii = 1:P.NumberOfFrames
     %% -------------------------------------------------------------------------
     % Coding
     %bits = randi([0 1],1,P.NumberOfBits); % Random Data
-    bits = randi([0,1],1,P.NumberOfBits);
+    bits = ones(1,P.NumberOfBits);
     bits_tail = add_enc_tail(bits); % adding a tail
     c = conv_enc(bits_tail);  %convolutional encoding
     c_split = reshape(c, P.RX, []);
     
     %% -------------------------------------------------------------------------
-    tx_signal=zeros(1,172032/P.RX + P.ChannelLength - 1);
-    
+    tx_signal=zeros(P.RX,172032/P.RX);% + P.ChannelLength - 1);
+    y = zeros(P.RX,172032/P.RX + P.ChannelLength - 1);
     for i_antenna = 1:P.RX
         Coding_out = c_split(i_antenna,:);
         
@@ -63,86 +63,84 @@ for ii = 1:P.NumberOfFrames
                 disp('Channel not supported')
         end
         
-        %%-------------------------------------------------------------------------
-        % Simulation
-        for ss = 1:length(P.SNRRange)
-            ss
-            SNRdb  = P.SNRRange(ss);
-            SNRlin = 10^(SNRdb/10);
-            noise  = 1/sqrt(2*SNRlin) *(randn(1,WaveLengthTX) + 1i* randn(1,WaveLengthTX) );
-            % Channel
-            switch P.ChannelType
-                case 'AWGN',
-                    y = waveform + noise';
-                case 'Fading',
-                    y = waveform .* h + noise;
-                case 'Multipath'
-                    y = conv(waveform,himp) + noise;
-                otherwise,
-                    disp('Channel not supported')
-            end
-            
-            
-            % Add the two TX signals together for mimo case.
-            tx_signal = tx_signal + y;
-            himp_saved(i_antenna,:) = himp;
-            
-        end
-    end % mimo antenna loop
-    
-    
-    
-    
+        % Add the two TX signals together for mimo case.
+        tx_signal(i_antenna,:) =  waveform;
+        himp_saved(i_antenna,:) = himp;
+    end
     
     %%-------------------------------------------------------------------------
-    % Receiver
-    % what is P.sequence ?
-    rx_signal = [];
-    
-    for i_antenna = 1:P.RX
-        
-        switch P.ReceiverType
-            case 'Simple',
-                x_hat = (real(tx_signal)<0);
-            case 'Rake',
-                rxsymbols=zeros(length(mwaveform),1);
-                for f=1:P.RakeFingers
-                    ycrop=tx_signal(f:L_spread+f-1);
-                    yresh=(reshape(ycrop,length(P.Sequence(i_antenna,:)),length(mwaveform))).';
-                    rxsymbols= rxsymbols+(yresh*conj(P.Sequence(i_antenna,:)).')*conj(himp_saved(i_antenna,f));
-                end
-                x_hat = reshape(rxsymbols(1:length(mwaveform)) < 0,1,length(mwaveform));
+    % Simulation
+    for ss = 1:length(P.SNRRange)
+        ss
+        SNRdb  = P.SNRRange(ss);
+        SNRlin = 10^(SNRdb/10);
+        noise  = 1/sqrt(2*SNRlin) *(randn(1,WaveLengthTX) + 1i* randn(1,WaveLengthTX) );
+        % Channel
+        switch P.ChannelType
+            case 'AWGN',
+                y = tx_signal + noise';
+            case 'Fading',
+                y = tx_signal .* h + noise;
+            case 'Multipath'
+                for i = 1:P.RX
+                    y(i,:) = conv2(tx_signal(i,:),himp_saved(i,:));% + noise;
+                end;
             otherwise,
-                disp('Source Encoding not supported')
+                disp('Channel not supported')
         end
         
-        %%-------------------------------------------------------------------------
-        rxbits_despread=despread_match_filter(x_hat,P.Long_code);
-        sum1 = sum(rxbits_despread ~= c_mult');
-        % Demultiplication
-        rxbits_demult = demult4(rxbits_despread);
-        sum2 = sum(rxbits_demult ~= c_ortogonal');
-        % Orthogonal demodulation
-        demodwaveform = orthogonalDemodulation(rxbits_demult);
-        
-        rx_signal = [rx_signal demodwaveform];
-    end %mimo antenna loop
-    rx_signal = reshape(rx_signal.',1,[])';
-    sum3 = sum(rx_signal ~= c);
-    %demodwaveform1 = x_hat;
-    % conv. Decoder
-    rxbits = conv_dec(rx_signal,length(bits_tail));
-    
-    
-    %%-------------------------------------------------------------------------
-    
-    
-    % BER count
-    rxbits = rxbits(1:P.NumberOfBits);
-    errors =  sum(rxbits ~= bits');
-    
-    Results(ss) = Results(ss) + errors;
-    
+        for i_antenna = 1:P.RX
+            
+            %%-------------------------------------------------------------------------
+            % Receiver
+            % what is P.sequence ?
+            rx_signal = [];
+            
+            for i_antenna = 1:P.RX
+                
+                switch P.ReceiverType
+                    case 'Simple',
+                        x_hat = (real(y)<0);
+                    case 'Rake',
+                        rxsymbols=zeros(length(mwaveform),1);
+                        for f=1:P.RakeFingers
+                            ycrop=y(f:L_spread+f-1);
+                            yresh=(reshape(ycrop,length(P.Sequence(i_antenna,:)),length(mwaveform))).';
+                            rxsymbols= rxsymbols+(yresh*conj(P.Sequence(i_antenna,:)).')*conj(himp_saved(i_antenna,f));
+                        end
+                        x_hat = reshape(rxsymbols(1:length(mwaveform)) < 0,1,length(mwaveform));
+                    otherwise,
+                        disp('Source Encoding not supported')
+                end
+                
+                %%-------------------------------------------------------------------------
+                rxbits_despread=despread_match_filter(x_hat,P.Long_code);
+                sum1 = sum(rxbits_despread ~= c_mult');
+                % Demultiplication
+                rxbits_demult = demult4(rxbits_despread);
+                sum2 = sum(rxbits_demult ~= c_ortogonal');
+                % Orthogonal demodulation
+                demodwaveform = orthogonalDemodulation(rxbits_demult);
+                
+                rx_signal = [rx_signal demodwaveform];
+            end %mimo antenna loop
+            rx_signal = reshape(rx_signal.',1,[])';
+            sum3 = sum(rx_signal ~= c);
+            %demodwaveform1 = x_hat;
+            % conv. Decoder
+            rxbits = conv_dec(rx_signal,length(bits_tail));
+            
+            
+            %%-------------------------------------------------------------------------
+            
+            
+            % BER count
+            rxbits = rxbits(1:P.NumberOfBits);
+            errors =  sum(rxbits ~= bits');
+            
+            Results(ss) = Results(ss) + errors;
+        end
+    end
     
 end
 
