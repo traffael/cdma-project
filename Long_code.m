@@ -1,4 +1,4 @@
-function Long_c = Long_code(P,ESN)
+function Long_c = Long_code(ESN)
     Public_log_code_mask = [ESN 0 0 0 1 1 0 0 0 1 1];  
     Initial_state = [1; zeros(41,1)];
     Polinomial = [1 1 1 1 0 1 1 1 0 0 1 0 0 0 0 0 1 1 1 1 0 1 1 0 0 1 1 1 0 0 0 1 0 1 0 1 0 0 0 0 0 1];

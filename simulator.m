@@ -15,13 +15,13 @@ Results = zeros(1,length(P.SNRRange));
 N = 24576;
 for ii = 1:P.NumberOfFrames
     ii
-%%-------------------------------------------------------------------------     
+%% -------------------------------------------------------------------------     
     % Coding
     %bits = randi([0 1],1,P.NumberOfBits); % Random Data
     bits = randi([0,1],1,P.NumberOfBits);
     bits_tail = add_enc_tail(bits); % adding a tail
     c = conv_enc(bits_tail);  %convolutional encoding
-%%-------------------------------------------------------------------------
+%% -------------------------------------------------------------------------
     % Orthogonal modulation
     c_ortogonal = orthogonalModulation(c);
     
