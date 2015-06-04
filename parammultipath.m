@@ -6,7 +6,7 @@
 % EPFL
 
 % Parameters
-P.NumberOfBits      = 184;
+P.NumberOfBits      = 184/2;
 
 
 P.CodingType    = 'None';
@@ -16,18 +16,16 @@ P.ChannelLength = 4;
 P.NumberOfFrames  = 3;
 P.NumberOfFrames  = 50;
 P.Sequence = [1 1 1 -1 -1 1 -1 ];
+P.nMIMO = 1; %1 antenna
 
 ESN1 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
-ESN2 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0];
 
-P.Long_code = zeros(2, 256,96);
-P.Long_code(1,:,:) = Long_code(ESN1);
-P.Long_code(2,:,:) = Long_code(ESN2);
+P.Long_code = zeros(256,96);
+P.Long_code(:,:) = Long_code(ESN1);
 
 P.Sequence(1,:) = [1 1 1 -1 -1 1 -1 ];
-P.Sequence(2,:) = [1 1 1 -1 -1 -1 -1 ];
 
-P.RX = 2; % Number of RX antennas
+P.RX = 1; % Number of RX antennas
 
 P.SNRRange = -16:2:10; % SNR Range to simulate in dB
 

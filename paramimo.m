@@ -16,6 +16,7 @@ P.ChannelLength = 4;
 P.NumberOfFrames  = 3;
 P.NumberOfFrames  = 50;
 P.Sequence = [1 1 1 -1 -1 1 -1 ];
+P.nMIMO = 2; %2 antennas
 
 ESN1 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
 ESN2 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0];
