@@ -21,16 +21,15 @@ ESN2 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0];
 P.Long_code(1) = Long_code(ESN1);
 P.Long_code(2) = Long_code(ESN2);
 
-P.Sequence(1) = [1 1 1 -1 -1 1 -1 ];
-P.Sequence(2) = [1 1 1 -1 -1 -1 -1 ];
+P.Sequence(1 = [1 1 1 -1 -1 1 -1 ];
 
-P.RX = 2; % Number of RX antennas
+P.RX = 1; % Number of RX antennas
 
 P.SNRRange = -15:2:15; % SNR Range to simulate in dB
 
 P.ReceiverType  = 'Rake';
 
-P.RakeFingers = 3;
+P.RakeFingers = 4;
 BER1 = simulator(P);
 
 
