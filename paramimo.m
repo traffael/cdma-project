@@ -15,15 +15,14 @@ P.ChannelType   = 'Multipath'; % 'AWGN', 'Fading'
 P.ChannelLength = 4;
 P.NumberOfFrames  = 3;
 P.NumberOfFrames  = 50;
-P.Sequence = [1 1 1 -1 -1 1 -1 ];
 P.nMIMO = 2; %2 antennas
 
 ESN1 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
 ESN2 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0];
 
-P.Long_code = zeros(2, 256,96);
-P.Long_code(1,:,:) = Long_code(ESN1);
-P.Long_code(2,:,:) = Long_code(ESN2);
+P.Long_code = zeros( 256,96,2);
+P.Long_code(:,:,1) = Long_code(ESN1);
+P.Long_code(:,:,2) = Long_code(ESN2);
 
 P.Sequence(1,:) = [1 1 1 -1 -1 1 -1 ];
 P.Sequence(2,:) = [1 1 1 -1 -1 -1 -1 ];

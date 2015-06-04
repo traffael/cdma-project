@@ -1,6 +1,6 @@
 function P_demult = demult4(P)
     j = 1;
-    for i = 1:length(P)/4
+    for i = 1:length(P)/
         P_new(i) = P(j);
         j = j + 4;
     end;
