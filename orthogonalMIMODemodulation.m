@@ -1,6 +1,4 @@
 function [ output_stream ] = orthogonalMIMODemodulation( input_stream, user )
-%ORTHOGONALMODULATION Summary of this function goes here
-%   Detailed explanation goes here
     hadamardMatrix = hadamard(64);
     input_stream=2*input_stream-1;
 

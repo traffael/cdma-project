@@ -95,14 +95,13 @@ for i_frame = 1:P.NumberOfFrames
         % Receiver
         i_user_rx = 1; %index of the mobile user. Will be used later when implementing multiple users.
         
-        %% ----> The rake receiver is currently only operating on one of the 2 MIMO RX antennas...
         rx_virtual_antennas=zeros(size(tx_bits_split,2),P.nMIMO,P.RakeFingers);
         
         %% MIMO Rake receiver:
         for i_rx_antenna = 1:P.nMIMO
             for f=1:P.RakeFingers
                 rx_signal_crop=rx_signal(i_rx_antenna,f:WaveLengthTX+f-1); 
-                rx_bits_despread = despread_match_filter(real(rx_signal_crop),P.Long_code(:,:,i_user_rx)); 
+                rx_bits_despread = despread_match_filter(real(rx_signal_crop),P.Long_code(:,:,i_user_rx), P); 
                 rx_bits_demult = demult4(rx_bits_despread);
                 rx_bits_demod = orthogonalMIMODemodulation(rx_bits_demult,i_user_rx);
                 rx_virtual_antennas(:,i_rx_antenna,f) = rx_bits_demod;
@@ -110,24 +109,12 @@ for i_frame = 1:P.NumberOfFrames
             
         end
         
-        %% Do MIMO
-        rx_bits_mimo = sum(rx_virtual_antennas,3);
+        %% Do MIMO TODO
+        rx_bits_mimo = mimo_decoding(rx_virtual_antennas,himp_saved);
         
         %% recombine the two bitstreams from MIMO again.
         rx_bits_coded = []; 
         for i_antenna = 1:P.nMIMO
-            
-       %     rx_bits_matched_filter = reshape(rx_mimo(1:length(tx_bits_matched_filter),i_antenna) < 0,1,length(tx_bits_matched_filter));
-            %%-------------------------------------------------------------------------
-       %     sum0= sum(rx_bits_matched_filter ~= tx_bits_matched_filter');
-       %     rx_bits_despread=despread_match_filter(rx_bits_matched_filter,P.Long_code(:,:,i_antenna));
-       %     sum1 = sum(rx_bits_despread ~= tx_bits_repeated');
-            % Demultiplication
-       %     rx_bits_demult = demult4(rx_bits_despread);
-       %     sum2 = sum(rx_bits_demult ~= tx_bits_ortogonal');
-            % Orthogonal demodulation
-       %     rx_bits_demod = orthogonalDemodulation(rx_bits_demult);
-            
             rx_bits_coded = [rx_bits_coded rx_bits_mimo(:,i_antenna)];
         end %mimo antenna loop
         rx_bits_coded = reshape(rx_bits_coded.',1,[])';
@@ -139,8 +126,6 @@ for i_frame = 1:P.NumberOfFrames
         
         
         %%-------------------------------------------------------------------------
-        
-        
         % BER count
         rx_information_bits = rx_information_bits(1:P.NumberOfBits);
         errors =  sum(rx_information_bits ~= tx_information_bits');

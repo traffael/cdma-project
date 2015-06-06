@@ -2,7 +2,7 @@ function Long_c = Long_code(ESN)
     Public_log_code_mask = [ESN 0 0 0 1 1 0 0 0 1 1];  
     Initial_state = [1; zeros(41,1)];
     Polinomial = [1 1 1 1 0 1 1 1 0 0 1 0 0 0 0 0 1 1 1 1 0 1 1 0 0 1 1 1 0 0 0 1 0 1 0 1 0 0 0 0 0 1];
-    Long_c = zeros(256,96);
+    Long_c = zeros(256*3,96);
     for j = 1:96
         for i = 1:256*3 %% MODIF: *3 is because of different walsh modulation
             if Initial_state(42) == 1
