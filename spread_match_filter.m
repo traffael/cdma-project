@@ -1,8 +1,8 @@
-function P_spread = spread_match_filter(P,Long_code)
-    P1 = reshape(P,256,length(P)/256);
-    P_spread = zeros(size(P1));
-    for j = 1:length(P)/256
-        P_spread(:,j) = xor(Long_code(:,j),P1(:,j));
+function output_stream = spread_match_filter(input_stream,Long_code, P)
+    stream_reshaped = reshape(input_stream,256*3,length(input_stream)/(256*3));
+    output_stream = zeros(size(stream_reshaped));
+    for j = 1:length(input_stream)/256/3
+        output_stream(:,j) = xor(Long_code(:,j),stream_reshaped(:,j));
     end;
-    P_spread = reshape(P_spread,length(P),1);
+    output_stream = reshape(output_stream,length(input_stream),1);
 end

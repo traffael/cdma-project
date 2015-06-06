@@ -1,8 +1,8 @@
-function P_despread = despread_match_filter(P, Long_code)
-    P2 = reshape(P,256,length(P)/256);
-    P_despread = zeros(size(P2));
-    for j = 1:length(P)/256
-        P_despread(:,j) = xor(Long_code(:,j),P2(:,j));
+function output_stream = despread_match_filter(input_stream, Long_code)
+    stream_reshaped = reshape(input_stream,256*3,length(input_stream)/256/3);
+    output_stream = zeros(size(stream_reshaped));
+    for j = 1:length(input_stream)/256/3
+        output_stream(:,j) = xor(Long_code(:,j),stream_reshaped(:,j));
     end;
-    P_despread = reshape(P_despread,length(P),1);
+    output_stream = reshape(output_stream,length(input_stream),1);
 end
