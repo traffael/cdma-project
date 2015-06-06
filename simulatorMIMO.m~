@@ -82,7 +82,7 @@ for i_frame = 1:P.NumberOfFrames
             case 'Multipath'
                 for i_channel = 1:P.nMIMO
                     for i_antenna = 1:P.nMIMO
-                        rx_signal(i_channel,:) = rx_signal(i_channel,:) + conv(tx_signal(:,i_antenna,i_channel),himp_saved(:,i_antenna,i_channel)).' + noise;
+                        rx_signal(i_channel,:) = rx_signal(i_channel,:) + conv(tx_signal(:,i_antenna,i_channel),himp_saved(:,i_antenna,i_channel)).';% + noise;
                     end
                 end;
             otherwise,
@@ -111,7 +111,7 @@ for i_frame = 1:P.NumberOfFrames
         
         %% Do MIMO TODO
         
-        rx_bits_mimo = mimo_decoding(rx_virtual_antennas,himp_saved, P);
+        rx_bits_mimo = mimo_decoding(rx_virtual_antennas,himp_saved, P, i_user_rx);
         rx_bits_coded = rx_bits_mimo';
         
         %% recombine the two bitstreams from MIMO again.
