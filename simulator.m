@@ -19,8 +19,8 @@ for ii = 1:P.NumberOfFrames
     % Coding
     %bits = randi([0 1],1,P.NumberOfBits); % Random Data
     bits = randi([0,1],1,P.NumberOfBits);
-    bits_tail = add_enc_tail(bits); % adding a tail
-    c = conv_enc(bits_tail);  %convolutional encoding
+    bits_tail = add_enc_tail(bits,P); % adding a tail
+    c = conv_enc(bits_tail,P);  %convolutional encoding
 %%-------------------------------------------------------------------------
     % Orthogonal modulation
     c_ortogonal = orthogonalModulation(c);
@@ -29,17 +29,14 @@ for ii = 1:P.NumberOfFrames
     c_mult = mult4(c_ortogonal);
     
     % Spreading match filter  
-    mwaveform=spread_match_filter(c_mult,P.Long_code);
+    mwaveform=spread_match_filter(c_mult,P.Long_code,P);
     
     mod_waveform = 1-2*mwaveform ;
     
     waveform = SpreadSequence*mod_waveform';
     L_spread = length(mod_waveform)*length(SpreadSequence);
     waveform  = reshape(waveform,1,L_spread);
-    mmwaveform = zeros(1,L_spread,0);
-    for i=1:P.RX
-        mmmwaveform = cat(3,mmwaveform,waveform);
-    end
+    
     
     
 %%------------------------------------------------------------------------- 
@@ -70,11 +67,11 @@ for ii = 1:P.NumberOfFrames
         % Channel
         switch P.ChannelType
             case 'AWGN',
-                y = mwaveform + noise';
+                y = mod_waveform;% + noise';
             case 'Fading',
-                y = mwaveform .* h + noise;
+                y = mod_waveform .* h + noise;
             case 'Multipath'
-                y = conv(mmmwaveform,himp) + noise;
+                y = conv(waveform,himp) + noise;
             otherwise,
                 disp('Channel not supported')
         end
@@ -100,7 +97,7 @@ for ii = 1:P.NumberOfFrames
         end
           
 %%-------------------------------------------------------------------------
-        rxbits_despread=despread_match_filter(x_hat,P.Long_code);
+        rxbits_despread=despread_match_filter(x_hat,P.Long_code,P);
         sum1 = sum(rxbits_despread ~= c_mult');
         % Demultiplication
         rxbits_demult = demult4(rxbits_despread);

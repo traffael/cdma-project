@@ -23,7 +23,7 @@ ESN1 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
 % only needed for the second user.
 
 P.Long_code = zeros( 256*3,96,2);
-P.Long_code(:,:,1) = Long_code(ESN1); %PN sequence. Specific to each USER, but the SAME for both mimo
+P.Long_code(:,:,1) = Long_code(ESN1,0); %PN sequence. Specific to each USER, but the SAME for both mimo
 %P.Long_code(:,:,2) = Long_code(ESN2); 
 
 P.nUsers = 1; % Number of users

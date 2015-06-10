@@ -21,7 +21,7 @@ P.nMIMO = 1; %1 antenna
 ESN1 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
 
 P.Long_code = zeros(256,96);
-P.Long_code(:,:) = Long_code(ESN1);
+P.Long_code(:,:) = Long_code(ESN1,1);
 
 P.Sequence(1,:) = [1 1 1 -1 -1 1 -1 ];
 
