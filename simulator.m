@@ -31,27 +31,27 @@ for ii = 1:P.NumberOfFrames
     % Spreading match filter  
     mwaveform=spread_match_filter(c_mult,P.Long_code,P);
     
-    mod_waveform = 1-2*mwaveform ;
+    tx_signal = 1-2*mwaveform ;
     
-    waveform = SpreadSequence*mod_waveform';
-    L_spread = length(mod_waveform)*length(SpreadSequence);
-    waveform  = reshape(waveform,1,L_spread);
+%    waveform = SpreadSequence*mod_waveform';
+%    L_spread = length(mod_waveform)*length(SpreadSequence);
+%    waveform  = reshape(waveform,1,L_spread);
     
     
-    
+    WaveLengthTX = size(tx_signal,1);
+    WaveLengthRX = WaveLengthTX+P.ChannelLength - 1;
 %%------------------------------------------------------------------------- 
     % Channel
     switch P.ChannelType
         case 'AWGN',
-            h = ones(1,length(mwaveform),P.RX);
-            NumberOfBitsRX=length(mwaveform);
+            h = ones(1,WaveLengthTX,P.RX);
         case 'Fading',
-            h = channel(P.RX,length(mwaveform),1,P.CoherenceTime,1);
+            h = channel(P.RX,WaveLengthTX,1,P.CoherenceTime,1);
         case 'Multipath',
-            NumberOfBitsRX   = L_spread+P.ChannelLength-1;
             himp = sqrt(1/2)* ( randn(1,P.ChannelLength) + 1i * randn(1,P.ChannelLength) ); % channel has imaginary stuff?
+%  himp=[1 0 0];                       
             himp = himp/norm(himp); %%normalize channel taps.
-            h = himp(1)*ones(1,NumberOfBitsRX,P.RX);
+            h = himp(1)*ones(1,WaveLengthRX,P.RX);
             
         otherwise,
             disp('Channel not supported')
@@ -63,15 +63,15 @@ for ii = 1:P.NumberOfFrames
         ss
         SNRdb  = P.SNRRange(ss);
         SNRlin = 10^(SNRdb/10);
-        noise  = 1/sqrt(2*SNRlin) *(randn(1,NumberOfBitsRX,P.RX) + 1i* randn(1,NumberOfBitsRX,P.RX) );
+        noise  = 1/sqrt(2*SNRlin) *(randn(1,WaveLengthRX,P.RX) + 1i* randn(1,WaveLengthRX,P.RX) )';
         % Channel
         switch P.ChannelType
             case 'AWGN',
-                y = mod_waveform;% + noise';
+                y = tx_signal;% + noise';
             case 'Fading',
-                y = mod_waveform .* h + noise;
+                y = tx_signal .* h + noise;
             case 'Multipath'
-                y = conv(waveform,himp) + noise;
+                y = conv(tx_signal,himp)+ noise;
             otherwise,
                 disp('Channel not supported')
         end
@@ -85,20 +85,21 @@ for ii = 1:P.NumberOfFrames
             case 'Simple',
                 x_hat = (real(y)<0);                
             case 'Rake',
-                rxsymbols=zeros(length(mwaveform),1);
+                rxsymbols=zeros(WaveLengthTX,1);
                 for f=1:P.RakeFingers
-                    ycrop=y(f:L_spread+f-1);
-                    yresh=(reshape(ycrop,length(P.Sequence),length(mwaveform))).';
-                    rxsymbols= rxsymbols+(yresh*conj(P.Sequence).')*conj(himp(f));
+                    ycrop=y(f:WaveLengthTX+f-1);
+                    %yresh=(reshape(ycrop,length(P.Sequence),WaveLengthTX)).';
+                    rxsymbols= rxsymbols+despread_match_filter((ycrop),P.Long_code,P)*conj(himp(f));
                 end
-                x_hat = reshape(rxsymbols(1:length(mwaveform)) < 0,1,length(mwaveform));
+                x_hat = reshape(rxsymbols(1:WaveLengthTX)<0,1,WaveLengthTX);
             otherwise,
                 disp('Source Encoding not supported')
         end
           
 %%-------------------------------------------------------------------------
-        rxbits_despread=despread_match_filter(x_hat,P.Long_code,P);
-        sum1 = sum(rxbits_despread ~= c_mult');
+        rxbits_despread=x_hat;
+       % rxbits_despread=despread_match_filter(x_hat,P.Long_code,P);
+        sum1 = sum(rxbits_despread ~= c_mult);
         % Demultiplication
         rxbits_demult = demult4(rxbits_despread);
         sum2 = sum(rxbits_demult ~= c_ortogonal');

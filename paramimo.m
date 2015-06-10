@@ -14,7 +14,7 @@ P.CodingType    = 'None';
 P.Modulation    = 1;        % 1: BPSK
 P.codeLength = 8; % encoding (K=1+P.codeLength = 8)
 P.ChannelType   = 'Multipath'; % 'AWGN', 'Fading'
-P.ChannelLength = 4;
+P.ChannelLength = 3;
 P.NumberOfFrames  = 5;
 P.nMIMO = 2; %2 antennas
 
