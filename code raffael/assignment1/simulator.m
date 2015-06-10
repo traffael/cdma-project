@@ -1,4 +1,4 @@
-% Wireless Receivers II - Assignment 1:
+7% Wireless Receivers II - Assignment 1:
 %
 % Direct Sequence Spread Spectrum Simulation Framework
 %

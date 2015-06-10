@@ -17,11 +17,13 @@ P.codeLength = 8; % encoding (K=1+P.codeLength = 8)
 P.ChannelLength = 3;
 P.NumberOfFrames  = 5;
 P.nMIMO = 1; %1 antenna
+P.useIS95Walsh = 0; %boolean, 1 if the standard Walsh mapping is used as
+%                   defined in the IS95 standard. 0 if
+%                   orthogonalMIMO(De)modulation function is used.
 
 ESN1 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
 
-P.Long_code = zeros(256,96);
-P.Long_code(:,:) = Long_code(ESN1,1);
+P.Long_code = gen_long_code(ESN1,P);
 
 P.Sequence(1,:) = [1 1 1 -1 -1 1 -1 ];
 

@@ -1,13 +1,13 @@
-function Long_c = Long_code(ESN, useIS95Walsh)
+function Long_c = gen_long_code(ESN, P)
 % ESN           : initial state for each user
 % useIS95Walsh  : boolean, 1 if the standard Walsh mapping is used as
 %                   defined in the IS95 standard. 0 if
 %                   orthogonalMIMO(De)modulation function is used.
 
-if(useIS95Walsh)
+if(P.useIS95Walsh)
     dim1 = 256;
 else
-    dim1 = 256*3;
+    dim1 = 256*3*2/P.nMIMO;
 end
 
 Public_log_code_mask = [ESN 0 0 0 1 1 0 0 0 1 1];

@@ -20,10 +20,10 @@ for i_frame = 1:P.NumberOfFrames
     tx_bits_split = reshape(tx_bits_coded, P.nMIMO, []); %split up the bitstream to the two antennas
     
     %% -------------------------------------------------------------------------
-    tx_signal=zeros(length(tx_bits_coded)*64*4/P.nMIMO,P.nMIMO,P.nMIMO); % *64: walsh mapping; *4: bits repetition
+    tx_signal=zeros(length(tx_bits_coded)*64*4/P.nMIMO,P.nMIMO); % *64: walsh mapping; *4: bits repetition
     himp_saved=zeros(P.ChannelLength,P.nMIMO,P.nMIMO); %this stores the different channel coefficients
     
-    i_user_tx = 1; %index of the mobile user. Will be used later when implementing multiple users.    
+    i_user_tx = 1; %index of the mobile user. Will be used later when implementing multiple users.
     %% divide the information bits to the two antennas and apply modulation & spreading separately
     for i_tx_antenna = 1:P.nMIMO
         % Orthogonal modulation
@@ -51,7 +51,7 @@ for i_frame = 1:P.NumberOfFrames
                 case 'Multipath',
                     %WaveLengthTX   = L_spread+P.ChannelLength-1;
                     himp = sqrt(1/2)* (randn(1,P.ChannelLength) + 1i * randn(1,P.ChannelLength));
-%% DEBUG: remove this:
+                    %% DEBUG: remove this:
                     himp = [1 0 0];%ones(1,P.ChannelLength);
                     himp = himp/norm(himp); %%normalize channel taps.
                 otherwise,
@@ -59,10 +59,11 @@ for i_frame = 1:P.NumberOfFrames
             end
             
             % Store the two TX signals in separate streams
-            tx_signal(:,i_tx_antenna,i_channel) =  tx_symbols;
             himp_saved(:,i_tx_antenna,i_channel) = himp;
             
         end %i_channel
+        
+        tx_signal(:,i_tx_antenna) =  tx_symbols;
     end %i_tx_antenna
     
     %%-------------------------------------------------------------------------
@@ -80,9 +81,9 @@ for i_frame = 1:P.NumberOfFrames
             case 'Fading',
                 rx_signal = tx_signal .* h + noise;
             case 'Multipath'
-                for i_channel = 1:P.nMIMO
-                    for i_antenna = 1:P.nMIMO
-                        rx_signal(i_channel,:) = rx_signal(i_channel,:) + conv(tx_signal(:,i_antenna,i_channel),himp_saved(:,i_antenna,i_channel)).' + noise;
+                for j_rx_antenna = 1:P.nMIMO
+                    for j_tx_antenna = 1:P.nMIMO
+                        rx_signal(j_rx_antenna,:) = rx_signal(j_rx_antenna,:) + conv(tx_signal(:,j_tx_antenna),himp_saved(:,j_tx_antenna,j_rx_antenna)).' ;%+ noise;
                     end
                 end;
             otherwise,
@@ -100,8 +101,8 @@ for i_frame = 1:P.NumberOfFrames
         %% MIMO Rake receiver:
         for i_rx_antenna = 1:P.nMIMO
             for f=1:P.RakeFingers
-                rx_signal_crop=rx_signal(i_rx_antenna,f:WaveLengthTX+f-1); 
-                rx_bits_despread = despread_match_filter(rx_signal_crop,P.Long_code(:,:,i_user_rx), P); 
+                rx_signal_crop=rx_signal(i_rx_antenna,f:WaveLengthTX+f-1);
+                rx_bits_despread = despread_match_filter(rx_signal_crop,P.Long_code(:,:,i_user_rx), P);
                 rx_bits_demult = demult4(rx_bits_despread);
                 rx_bits_demod = orthogonalMIMODemodulation(rx_bits_demult,i_user_rx);
                 rx_virtual_antennas(:,i_rx_antenna,f) = rx_bits_demod;
@@ -115,7 +116,7 @@ for i_frame = 1:P.NumberOfFrames
         rx_bits_coded = rx_bits_mimo';
         
         %% recombine the two bitstreams from MIMO again.
-        %rx_bits_coded = []; 
+        %rx_bits_coded = [];
         %for i_antenna = 1:P.nMIMO
         %    rx_bits_coded = [rx_bits_coded rx_bits_mimo(:,i_antenna)];
         %end %mimo antenna loop

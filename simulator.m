@@ -13,34 +13,40 @@ NumberOfChips   = P.Modulation*SeqLen; % per Frame
 
 Results = zeros(1,length(P.SNRRange));
 N = 24576;
+
+i_user_tx = 1; %index of the mobile user. Will be used later when implementing multiple users.
 for ii = 1:P.NumberOfFrames
     ii
-%%-------------------------------------------------------------------------     
+    %%-------------------------------------------------------------------------
     % Coding
     %bits = randi([0 1],1,P.NumberOfBits); % Random Data
     bits = randi([0,1],1,P.NumberOfBits);
     bits_tail = add_enc_tail(bits,P); % adding a tail
     c = conv_enc(bits_tail,P);  %convolutional encoding
-%%-------------------------------------------------------------------------
+    %%-------------------------------------------------------------------------
     % Orthogonal modulation
-    c_ortogonal = orthogonalModulation(c);
+    if(P.useIS95Walsh)
+        c_ortogonal = orthogonalModulation(c);
+    else
+        c_ortogonal = orthogonalMIMOModulation(c.',i_user_tx);
+    end
     
-    % Bits repetition  
+    % Bits repetition
     c_mult = mult4(c_ortogonal);
     
-    % Spreading match filter  
+    % Spreading match filter
     mwaveform=spread_match_filter(c_mult,P.Long_code,P);
     
     tx_signal = 1-2*mwaveform ;
     
-%    waveform = SpreadSequence*mod_waveform';
-%    L_spread = length(mod_waveform)*length(SpreadSequence);
-%    waveform  = reshape(waveform,1,L_spread);
+    %    waveform = SpreadSequence*mod_waveform';
+    %    L_spread = length(mod_waveform)*length(SpreadSequence);
+    %    waveform  = reshape(waveform,1,L_spread);
     
     
     WaveLengthTX = size(tx_signal,1);
     WaveLengthRX = WaveLengthTX+P.ChannelLength - 1;
-%%------------------------------------------------------------------------- 
+    %%-------------------------------------------------------------------------
     % Channel
     switch P.ChannelType
         case 'AWGN',
@@ -49,7 +55,7 @@ for ii = 1:P.NumberOfFrames
             h = channel(P.RX,WaveLengthTX,1,P.CoherenceTime,1);
         case 'Multipath',
             himp = sqrt(1/2)* ( randn(1,P.ChannelLength) + 1i * randn(1,P.ChannelLength) ); % channel has imaginary stuff?
-%  himp=[1 0 0];                       
+            %  himp=[1 0 0];
             himp = himp/norm(himp); %%normalize channel taps.
             h = himp(1)*ones(1,WaveLengthRX,P.RX);
             
@@ -57,7 +63,7 @@ for ii = 1:P.NumberOfFrames
             disp('Channel not supported')
     end
     
-%%------------------------------------------------------------------------- 
+    %%-------------------------------------------------------------------------
     % Simulation
     for ss = 1:length(P.SNRRange)
         ss
@@ -71,19 +77,20 @@ for ii = 1:P.NumberOfFrames
             case 'Fading',
                 y = tx_signal .* h + noise;
             case 'Multipath'
-                y = conv(tx_signal,himp)+ noise;
+                y = conv(tx_signal,himp) + noise;
             otherwise,
                 disp('Channel not supported')
         end
         
- 
         
-%%-------------------------------------------------------------------------         
+        
+        %%-------------------------------------------------------------------------
         % Receiver
-        % what is P.sequence ? 
+        
+        i_user_rx = 1; %index of the mobile user. Will be used later when implementing multiple users.
         switch P.ReceiverType
             case 'Simple',
-                x_hat = (real(y)<0);                
+                x_hat = (real(y)<0);
             case 'Rake',
                 rxsymbols=zeros(WaveLengthTX,1);
                 for f=1:P.RakeFingers
@@ -95,20 +102,24 @@ for ii = 1:P.NumberOfFrames
             otherwise,
                 disp('Source Encoding not supported')
         end
-          
-%%-------------------------------------------------------------------------
+        
+        %%-------------------------------------------------------------------------
         rxbits_despread=x_hat;
-       % rxbits_despread=despread_match_filter(x_hat,P.Long_code,P);
+        % rxbits_despread=despread_match_filter(x_hat,P.Long_code,P);
         sum1 = sum(rxbits_despread ~= c_mult);
         % Demultiplication
         rxbits_demult = demult4(rxbits_despread);
         sum2 = sum(rxbits_demult ~= c_ortogonal');
         % Orthogonal demodulation
-        demodwaveform = orthogonalDemodulation(rxbits_demult);  
-        sum3 = sum(demodwaveform ~= c);      
+        if(P.useIS95Walsh)
+            demodwaveform = orthogonalDemodulation(rxbits_demult);
+        else
+            demodwaveform = orthogonalMIMODemodulation(rxbits_demult,i_user_rx);
+        end
+        sum3 = sum(demodwaveform ~= c);
         %demodwaveform1 = x_hat;
         
-%%------------------------------------------------------------------------- 
+        %%-------------------------------------------------------------------------
         % conv. Decoder
         rxbits = conv_dec(demodwaveform,length(bits_tail));
         % BER count
@@ -125,5 +136,5 @@ BER = Results/(P.NumberOfBits*P.NumberOfFrames);
 
 
 
-    
-             
+
+
