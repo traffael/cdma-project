@@ -7,7 +7,7 @@ function Long_c = gen_long_code(ESN, P)
 if(P.useIS95Walsh)
     dim1 = 256;
 else
-    dim1 = 256*3*2/P.nMIMO;
+    dim1 = 256*3*2/4/P.nMIMO;
 end
 
 Public_log_code_mask = [ESN 0 0 0 1 1 0 0 0 1 1];
@@ -24,4 +24,6 @@ for j = 1:96
         % Multiplying with spreading sequence
     end
 end;
+
+Long_c=Long_c(:);
 end

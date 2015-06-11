@@ -1,4 +1,4 @@
-function [ output_stream ] = mimo_decoding( input_virtual_antennas, H ,P )
+function [ stream ] = mimo_decoding( input_virtual_antennas, H ,P )
 %% TODO
 %Constellations = [0+0i, 0+1i, 1+0i, 1+1i];
 H = H(1:P.RakeFingers,:,:);
@@ -25,8 +25,8 @@ for i = 1:len_inp
     chan_out_1(i) = Constellations(sHat(1));
     chan_out_2(i) = Constellations(sHat(2));
 end;
-stream = [chan_out_1 ; chan_out_2];
-output_stream = reshape(stream,1,[]);
+stream = [chan_out_1, chan_out_2];
+% output_stream = reshape(stream,1,[]);
 
 end
 

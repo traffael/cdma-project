@@ -8,7 +8,7 @@ function [ output_stream ] = orthogonalMIMODemodulation( input_stream, user )
     end
     
     input_stream = reshape(input_stream,64,[]).'; %reshape to perform matrix multiplication
-    output_stream = input_stream * hadamardMatrix(:,user); 
+    output_stream = input_stream * hadamardMatrix(:,user)/64; 
     %output_stream = output_stream(:)<0;
 end
 
