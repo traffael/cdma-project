@@ -1,10 +1,10 @@
 function [ output_stream ] = mimo_decoding( input_virtual_antennas, H ,P )
 %% TODO
-Constellations = [0+0i, 0+1i, 1+0i, 1+1i];
+%Constellations = [0+0i, 0+1i, 1+0i, 1+1i];
 H = H(1:P.RakeFingers,:,:);
 MIMO_in = P.nMIMO*P.RakeFingers;
 len_inp = length(input_virtual_antennas);
-%Constellations = [0, 1];
+Constellations = [1, -1];
 H = reshape(H,MIMO_in,P.nMIMO);
 y = reshape(input_virtual_antennas,len_inp,MIMO_in);
 G = pinv(H'*H)*H';

@@ -1,8 +1,4 @@
-function P_demult = demult4(P)
-    j = 1;
-    for i = 1:length(P)/4
-        P_new(i) = P(j);
-        j = j + 4;
-    end;
-    P_demult = P_new;
+function output_stream = demult4(input_stream)
+    stream_reshaped=reshape(input_stream,4,[]);
+    output_stream = [0.25 0.25 0.25 0.25]*stream_reshaped;
 end

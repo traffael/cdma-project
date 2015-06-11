@@ -17,7 +17,7 @@ P.codeLength = 8; % encoding (K=1+P.codeLength = 8)
 P.ChannelLength = 3;
 P.NumberOfFrames  = 5;
 P.nMIMO = 1; %1 antenna
-P.useIS95Walsh = 0; %boolean, 1 if the standard Walsh mapping is used as
+P.useIS95Walsh = 1; %boolean, 1 if the standard Walsh mapping is used as
 %                   defined in the IS95 standard. 0 if
 %                   orthogonalMIMO(De)modulation function is used.
 
