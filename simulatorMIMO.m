@@ -14,7 +14,7 @@ for i_frame = 1:P.NumberOfFrames
     %% -------------------------------------------------------------------------
     % Coding
     tx_information_bits = randi([0 1],1,P.NumberOfBits); % Random Data
-   tx_information_bits = ones(1,P.NumberOfBits);
+    %tx_information_bits = ones(1,P.NumberOfBits);
     tx_bits_tail = add_enc_tail(tx_information_bits,P); % adding a tail
     tx_bits_coded = conv_enc(tx_bits_tail,P);  %convolutional encoding
     tx_bits_split = reshape(tx_bits_coded,[],P.nMIMO).'; %split up the bitstream to the two antennas
@@ -69,9 +69,9 @@ for i_frame = 1:P.NumberOfFrames
         tx_signal(:,i_tx_antenna) =  tx_symbols;
     end %i_tx_antenna
     
-    himp_saved = zeros(1,2,2);
-    himp_saved(1,1,1) = 1;
-    himp_saved(1,2,2) = 1;
+    himp_saved = zeros(2,2,2);
+    himp_saved(:,1,1) = [ 1 1];
+    himp_saved(:,2,2) = [ 1 1];
     
     %%-------------------------------------------------------------------------
     % Simulation
@@ -120,8 +120,7 @@ for i_frame = 1:P.NumberOfFrames
         
         %% Do MIMO TODO
         
-        rx_bits_mimo = mimo_decoding(real(rx_virtual_antennas),himp_saved, P);
-        rx_bits_coded = (rx_bits_mimo<0)';
+        rx_bits_coded = mimo_decoding((rx_virtual_antennas),himp_saved, P);
         
         %% recombine the two bitstreams from MIMO again.
         %rx_bits_coded = [];
@@ -133,6 +132,7 @@ for i_frame = 1:P.NumberOfFrames
         
         
         %% conv. Decoder
+        plot((rx_bits_coded ~= tx_bits_coded))
         rx_information_bits = conv_dec(rx_bits_coded,length(tx_bits_tail));
         
         

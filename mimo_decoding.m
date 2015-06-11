@@ -5,9 +5,9 @@ H = H(1:P.RakeFingers,:,:);
 MIMO_in = P.nMIMO*P.RakeFingers;
 len_inp = length(input_virtual_antennas);
 Constellations = [1, -1];
-H = reshape(H,MIMO_in,P.nMIMO);
+Hresh = reshape(H,MIMO_in,P.nMIMO);
 y = reshape(input_virtual_antennas,len_inp,MIMO_in);
-G = pinv(H'*H)*H';
+G = pinv(Hresh'*Hresh)*Hresh';
 for i = 1:len_inp
     y1 = y(i,:);
     sTilde = G*(y1.');
@@ -25,8 +25,7 @@ for i = 1:len_inp
     chan_out_1(i) = Constellations(sHat(1));
     chan_out_2(i) = Constellations(sHat(2));
 end;
-stream = [chan_out_1, chan_out_2];
-% output_stream = reshape(stream,1,[]);
+stream = ([chan_out_1, chan_out_2]<0)';
 
 end
 

@@ -14,8 +14,8 @@ P.CodingType    = 'None';
 P.Modulation    = 1;        % 1: BPSK
 P.codeLength = 8; % encoding (K=1+P.codeLength = 8)
 P.ChannelType   = 'Multipath'; % 'AWGN', 'Fading'
-P.ChannelLength = 1;
-P.NumberOfFrames  = 5;
+P.ChannelLength = 2;
+P.NumberOfFrames  = 10;
 P.nMIMO = 2; %2 antennas
 P.useIS95Walsh = 0; %boolean, 1 if the standard Walsh mapping is used as
 %                   defined in the IS95 standard. 0 if
@@ -30,11 +30,11 @@ P.Long_code(:,:,1) = gen_long_code(ESN1,P); %PN sequence. Specific to each USER,
 
 P.nUsers = 1; % Number of users
 
-P.SNRRange = -16:2:10; % SNR Range to simulate in dB
+P.SNRRange = -16:2:-14; % SNR Range to simulate in dB
 
 P.ReceiverType  = 'Rake';
 
-P.RakeFingers = 1;
+P.RakeFingers = 2;
 
 
 BERmimo = simulatorMIMO(P);
