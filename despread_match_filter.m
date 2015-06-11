@@ -1,4 +1,7 @@
 function output_stream = despread_match_filter(input_stream, Long_code, P)
+% input stream : received symbols! (not bits)
+% output stream : despread symbols (not bits)
+
     N = size(Long_code,2); %(P.NumberOfBits + P.codeLength)/P.nMIMO;
     stream_reshaped = reshape(input_stream,length(input_stream)/N,[]);
     output_stream = zeros(size(stream_reshaped));
