@@ -30,12 +30,15 @@ for i_frame = 1:P.NumberOfFrames
         tx_bits_ortogonal = orthogonalMIMOModulation(tx_bits_split(i_tx_antenna,:),i_user_tx);
         
         % Bits repetition
-        tx_bits_repeated = tx_bits_ortogonal;%mult4(tx_bits_ortogonal);
+        tx_bits_repeated = tx_bits_ortogonal';%mult4(tx_bits_ortogonal);
         
         % Spreading match filter
-        tx_bits_matched_filter=spread_match_filter(tx_bits_repeated,P.Long_code(:,:,i_tx_antenna),P);
+        tx_bits_matched_filter=spread_match_filter(tx_bits_repeated,P.Long_code(:,:,i_user_tx),P);
         
         tx_symbols = 1-2*tx_bits_matched_filter ;
+        
+        test=despread_match_filter(tx_symbols,P.Long_code(:,:,i_user_tx), P)<0;
+        sumtest=sum(test~=tx_bits_repeated')
         %%-------------------------------------------------------------------------
         % Channel
         
@@ -106,7 +109,7 @@ for i_frame = 1:P.NumberOfFrames
         for i_rx_antenna = 1:P.nMIMO
             for f=1:P.RakeFingers
                 rx_signal_crop=rx_signal(i_rx_antenna,f:WaveLengthTX+f-1);
-                rx_bits_despread = despread_match_filter(rx_signal_crop,P.Long_code(:,:,i_user_rx), P);
+                rx_bits_despread = despread_match_filter(rx_signal_crop.',P.Long_code(:,:,i_user_rx), P);
                 
                 rx_bits_demult = rx_bits_despread;%(demult4(rx_bits_despread));
                 rx_bits_demod = orthogonalMIMODemodulation(rx_bits_demult,i_user_rx);

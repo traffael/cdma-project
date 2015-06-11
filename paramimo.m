@@ -25,7 +25,6 @@ ESN1 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
 %ESN2 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0];
 % only needed for the second user.
 
-P.Long_code = zeros( 256*3/4,96,2);
 P.Long_code(:,:,1) = gen_long_code(ESN1,P); %PN sequence. Specific to each USER, but the SAME for both mimo
 %P.Long_code(:,:,2) = Long_code(ESN2); 
 
