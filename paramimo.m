@@ -15,7 +15,7 @@ P.Modulation    = 1;        % 1: BPSK
 P.codeLength = 8; % encoding (K=1+P.codeLength = 8)
 P.ChannelType   = 'Multipath'; % 'AWGN', 'Fading'
 P.ChannelLength = 3;
-P.NumberOfFrames  = 5;
+P.NumberOfFrames  = 10;
 P.nMIMO = 2; %2 antennas
 P.useIS95Walsh = 0; %boolean, 1 if the standard Walsh mapping is used as
 %                   defined in the IS95 standard. 0 if
@@ -25,13 +25,12 @@ ESN1 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
 %ESN2 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0];
 % only needed for the second user.
 
-P.Long_code = zeros( 256*3,96,2);
 P.Long_code(:,:,1) = gen_long_code(ESN1,P); %PN sequence. Specific to each USER, but the SAME for both mimo
 %P.Long_code(:,:,2) = Long_code(ESN2); 
 
 P.nUsers = 1; % Number of users
 
-P.SNRRange = -16:2:10; % SNR Range to simulate in dB
+P.SNRRange = -16:2:-14; % SNR Range to simulate in dB
 
 P.ReceiverType  = 'Rake';
 

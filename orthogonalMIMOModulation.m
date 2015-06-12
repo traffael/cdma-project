@@ -10,7 +10,7 @@ function [ output_stream ] = orthogonalMIMOModulation( input_stream, user )
 %     end
     
     output_stream = hadamardMatrix(:,user) * (input_stream) ;
-    output_stream = output_stream(:)<0;
+    output_stream = (output_stream(:)<0)';
     
 
 end

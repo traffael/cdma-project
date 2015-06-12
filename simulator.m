@@ -15,7 +15,6 @@ Results = zeros(1,length(P.SNRRange));
 N = 24576;
 
 i_user_tx = 1; %index of the mobile user. Will be used later when implementing multiple users.
-n_users = P.Users;
 for ii = 1:P.NumberOfFrames
     ii
     %%-------------------------------------------------------------------------
