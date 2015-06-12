@@ -43,41 +43,20 @@ for i_frame = 1:P.NumberOfFrames
         
         WaveLengthTX = size(tx_signal,2);
         WaveLengthRX = WaveLengthTX+P.ChannelLength - 1;
-        add_sign_delayed1 = zeros(P.ChannelLength,WaveLengthRX);
-        add_sign_delayed2 = zeros(P.ChannelLength,WaveLengthRX);
-        for i_channel = 1:P.nMIMO
-            
-            switch P.ChannelType
-                case 'AWGN',
-                    h = ones(1,length(tx_symbols));
-                case 'Fading',
-                    h = channel(P.nMIMO,length(waveform),1,P.CoherenceTime,1);
-                case 'Multipath',
-                    %WaveLengthTX   = L_spread+P.ChannelLength-1;
-                    himp = sqrt(1/2)* (randn(1,P.ChannelLength) + 1i * randn(1,P.ChannelLength));
-                    %% DEBUG: remove this:
-                    %himp = [1 0 0];%ones(1,P.ChannelLength);
-                    himp = himp/norm(himp); %%normalize channel taps.
-                otherwise,
-                    disp('Channel not supported')
-            end
-            
-            % Store the two TX signals in separate streams
-            %himp_saved(:,i_tx_antenna,i_channel) = himp;
-            
-        end %i_channel
         tx_signal(i_tx_antenna,:) =  tx_symbols;
     end %i_tx_antenna
+    
+    %% Channel
     himp = sqrt(1/2)* (randn(P.ChannelLength*P.nMIMO,P.nMIMO) + 1i * randn(P.ChannelLength*P.nMIMO,P.nMIMO));
-        
+    himp = himp/norm(himp); %%normalize channel taps.
     
-    himp = zeros(6,2);
-    himp(1,1) = 1;
-    himp(4,1) = 1;
-    himp(3,2) = 1;
-    himp(6,2) = 1;
+    %himp = zeros(6,2);
+    %himp(1,1) = 1;
+    %himp(4,1) = 1;
+    %himp(3,2) = 1;
+    %himp(6,2) = 1;
     
-    %%-------------------------------------------------------------------------
+    %% -------------------------------------------------------------------------
     % Simulation
     for i_snr = 1:length(P.SNRRange)
         i_snr
@@ -92,37 +71,14 @@ for i_frame = 1:P.NumberOfFrames
             case 'Fading',
                 rx_signal = tx_signal .* h + noise;
             case 'Multipath'
-                for j_tx_antenna = 1:P.nMIMO
-                    var1 = [];
-                    var2 = zeros(1,P.ChannelLength-1);
+                for j_rx_antenna = 1:P.nMIMO
                     a = 1;
-                    for iii = 1:P.nMIMO*P.ChannelLength
-                        if iii == P.nMIMO*P.ChannelLength/2+1
-                            add_sign_delayed1 = add_sign_delayed2;
-                            add_sign_delayed2 = zeros(P.ChannelLength,WaveLengthRX);
-                            var1 = [];
-                            var2 = zeros(1,P.ChannelLength-1);
-                            a = 1;
-                        end;
-                        add_sign_delayed2(a,:) = [var1 conv(tx_signal(j_tx_antenna,:),himp(iii,j_tx_antenna)) var2];
-                        var1 = [var1 0];
-                        var2 = var2(a:P.ChannelLength-2);
-                        a = a+1;
-                        
-                        %rx_signal(b,:) = rx_signal(b,:) + add_sign_delayed ;%+ noise;
-                    end;
-                    if j_tx_antenna == 1
-                        rx_signal1_1 = sum(add_sign_delayed1,1);
-                        rx_signal1_2 = sum(add_sign_delayed2,1);
+                    if j_rx_antenna == 1
+                        rx_signal(j_rx_antenna,:) = conv(tx_signal(1,:),himp(1:length(himp)/2,1))+conv(tx_signal(2,:),himp(1:length(himp)/2,2));%+ noise; % приходит на 1 антенну
                     else
-                        rx_signal2_1 = sum(add_sign_delayed1,1);
-                        rx_signal2_2 = sum(add_sign_delayed2,1);
+                        rx_signal(j_rx_antenna,:) = conv(tx_signal(1,:),himp(length(himp)/2+1:end,1))+conv(tx_signal(2,:),himp(length(himp)/2+1:end,2));%+ noise; % приходит на 2 антенну
                     end;
                 end;
-                rx_signal(1,:) = rx_signal1_1 + rx_signal2_1;
-                rx_signal(2,:) = rx_signal1_2 + rx_signal2_2;
-                
-                
             otherwise,
                 disp('Channel not supported')
         end
@@ -133,9 +89,10 @@ for i_frame = 1:P.NumberOfFrames
         % Receiver
         i_user_rx = 1; %index of the mobile user. Will be used later when implementing multiple users.
         
-        rx_virtual_antennas=zeros(size(tx_bits_split,2),P.nMIMO,P.RakeFingers);
+        rx_virtual_antennas=zeros(P.nMIMO*P.RakeFingers,length(tx_bits_split));
         
         %% MIMO Rake receiver:
+        a = 1;
         for i_rx_antenna = 1:P.nMIMO
             for f=1:P.RakeFingers
                 rx_signal_crop=rx_signal(i_rx_antenna,f:WaveLengthTX+f-1);
@@ -143,10 +100,12 @@ for i_frame = 1:P.NumberOfFrames
                 
                 rx_bits_demult = rx_bits_despread;%(demult4(rx_bits_despread));
                 rx_bits_demod = orthogonalMIMODemodulation(rx_bits_demult,i_user_rx);
-                rx_virtual_antennas(:,i_rx_antenna,f) = rx_bits_demod;
+                rx_virtual_antennas(a,:) = rx_bits_demod;
+                a = a+1;
             end
             
         end
+        
         
         %% Do MIMO TODO
         

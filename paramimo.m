@@ -14,7 +14,7 @@ P.CodingType    = 'None';
 P.Modulation    = 1;        % 1: BPSK
 P.codeLength = 8; % encoding (K=1+P.codeLength = 8)
 P.ChannelType   = 'Multipath'; % 'AWGN', 'Fading'
-P.ChannelLength = 3;
+P.ChannelLength = 4;
 P.NumberOfFrames  = 10;
 P.nMIMO = 2; %2 antennas
 P.useIS95Walsh = 0; %boolean, 1 if the standard Walsh mapping is used as
@@ -34,7 +34,7 @@ P.SNRRange = -16:2:-14; % SNR Range to simulate in dB
 
 P.ReceiverType  = 'Rake';
 
-P.RakeFingers = 3;
+P.RakeFingers = 4;
 
 
 BERmimo = simulatorMIMO(P);
