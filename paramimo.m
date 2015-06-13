@@ -18,33 +18,48 @@ P.encoderPolynominal = [753 561];
 P.hadamardLength = 64; 
 P.ChannelType   = 'Multipath'; % 'AWGN', 'Fading'
 P.ChannelLength = 4;
-P.NumberOfFrames  = 100;
+P.NumberOfFrames  = 1e5;
 P.nMIMO = 2; %2 antennas
 P.useIS95Walsh = 0; %boolean, 1 if the standard Walsh mapping is used as
 %                   defined in the IS95 standard. 0 if
 %                   orthogonalMIMO(De)modulation function is used.
 
-ESN1 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
-%ESN2 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0];
-% only needed for the second user.
+P.nUsers = 32; % Number of users
+for i_user = 1:P.nUsers
+    ESN = randi([0 1],1, 32);
+    P.Long_code(:,i_user) = gen_long_code(ESN,P); %PN sequence. Specific to each USER, but the SAME for both mimo
+end 
 
-P.Long_code(:,1) = gen_long_code(ESN1,P); %PN sequence. Specific to each USER, but the SAME for both mimo
-%P.Long_code(:,:,2) = Long_code(ESN2); 
-
-P.nUsers = 1; % Number of users
-
-P.SNRRange = -16:2:10; % SNR Range to simulate in dB
+P.SNRRange = -25:2:15; % SNR Range to simulate in dB
 
 P.ReceiverType  = 'Rake';
 
 P.RakeFingers = 4;
 
-BERmimo = simulatorMIMO(P);
+u=[1 4 8 16 32 64];
+c=[2 3 4];
+for k=1:3
+    for l=1:3
+        l
+        P.nUsers     = u(l);
+        P.ChannelLength = c(k);
+        P.RakeFingers = c(k);
+        
+        BER(l,:) = simulatorMIMO(P);
+        
+        simlab(l,:) = sprintf('%s - Length: %d - Users: %d' ,P.ChannelType,P.ChannelLength,P.CDMAUsers);
+    end
 
-figure(1)
-semilogy(P.SNRRange,BERmimo,'b.-')
+figure(3)
+semilogy(P.SNRRange,BER,'*-')
 
 xlabel('SNR','FontSize',12,'FontWeight','bold');
 ylabel('BER','FontSize',12,'FontWeight','bold');
 xlim([min(P.SNRRange) max(P.SNRRange)]);
-grid on;
+ylim([1e-6, 1e0]);
+
+grid minor;
+legend(simlab);
+
+end
+
