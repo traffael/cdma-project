@@ -1,21 +1,12 @@
 function [ stream ] = mimo_decoding( input_virtual_antennas, H ,P )
-%% TODO
-%Constellations = [0+0i, 0+1i, 1+0i, 1+1i];
-%H = H(1:P.RakeFingers,:,:);
-MIMO_in = P.nMIMO*P.RakeFingers;
+
 len_inp = length(input_virtual_antennas);
 Constellations = [1+1i ,-1-1i];
-%Constellations = [1 ,-1];
-Hresh = H;
-%y = reshape(input_virtual_antennas,len_inp,MIMO_in);
-%y=input_virtual_antennas;
-%y = [input_virtual_antennas(:,1,1) input_virtual_antennas(:,1,2) input_virtual_antennas(:,2,1)   input_virtual_antennas(:,2,2)];
-y = input_virtual_antennas;
-%G = pinv(Hresh'*Hresh)*Hresh';
-G = pinv(H);
+
+chan_out_1 = zeros(1,len_inp);
+chan_out_2 = zeros(1,len_inp);
 for i = 1:len_inp
-    y1 = y(:,i);
-    %sTilde = G*(y1.');
+    y1 = input_virtual_antennas(:,i);
     sTilde1 = H\y1;
     Sravn = zeros(length(Constellations),1);
     sHat = zeros(length(sTilde1),1);
@@ -24,10 +15,9 @@ for i = 1:len_inp
         for j=1:length(Constellations)
             Sravn(j) = abs(sTilde1(ii)-Constellations(j));
         end;
-        [sHat_dist(ii) sHat(ii)] = min(Sravn);
+        [sHat_dist(ii), sHat(ii)] = min(Sravn);
     end;
-    %sHat = argmin ot rasstoyaniya % daet chislo v const ot 0 - 15
-    %sHat = sHat - 1;
+
     chan_out_1(i) = Constellations(sHat(1));
     chan_out_2(i) = Constellations(sHat(2));
 end;

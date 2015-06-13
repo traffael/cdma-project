@@ -5,5 +5,5 @@ function output_stream = spread_match_filter(input_stream,Long_code, P)
   %  for j = 1:N  %TODO: why a for loop?
   %      output_stream(:,j) = xor(Long_code(:,j),stream_reshaped(:,j));
   %  end;
- output_stream = xor(Long_code,input_stream.')';
+ output_stream = Long_code.*input_stream;
 end

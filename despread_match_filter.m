@@ -13,6 +13,5 @@ function output_stream = despread_match_filter(input_stream, Long_code, P)
 %     end;
 
 
-    long_code_symbols = 1-2*Long_code;
     output_stream = long_code_symbols'.*input_stream;
 end
