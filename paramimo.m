@@ -13,6 +13,8 @@ P.NumberOfBits      = 184;
 P.CodingType    = 'None';
 P.Modulation    = 1;        % 1: BPSK
 P.codeLength = 8; % encoding (K=1+P.codeLength = 8)
+P.codeRate = 1/2; % convolutional coding rate
+P.encoderPolynominal = [753 561];
 P.hadamardLength = 64; 
 P.ChannelType   = 'Multipath'; % 'AWGN', 'Fading'
 P.ChannelLength = 4;
@@ -26,7 +28,7 @@ ESN1 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1];
 %ESN2 = [1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0];
 % only needed for the second user.
 
-P.Long_code(:,:,1) = gen_long_code(ESN1,P); %PN sequence. Specific to each USER, but the SAME for both mimo
+P.Long_code(:,1) = gen_long_code(ESN1,P); %PN sequence. Specific to each USER, but the SAME for both mimo
 %P.Long_code(:,:,2) = Long_code(ESN2); 
 
 P.nUsers = 1; % Number of users

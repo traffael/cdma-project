@@ -10,19 +10,19 @@ function BER = simulatorMIMO(P)
 hadamardMatrix = 1/sqrt(P.hadamardLength)*hadamard(P.hadamardLength);
 
 %initialize the convolutional coding
-encoderPolynominal = [753 561];
-K = 9;
-convEnc = comm.ConvolutionalEncoder('TrellisStructure', poly2trellis(P.codeLength+1,encoderPolynominal)); %terminated, put outsidew for
-convDec = comm.ViterbiDecoder('TrellisStructure', poly2trellis(K,encoderPolynominal)); 
-
+convEnc = comm.ConvolutionalEncoder('TrellisStructure', poly2trellis(P.codeLength+1,P.encoderPolynominal)); %terminated, put outsidew for
+convDec = comm.ViterbiDecoder('TrellisStructure', poly2trellis(P.codeLength+1,P.encoderPolynominal)); 
 
 i_user_rx = 1; %index of the mobile user to be decoded on the RX side. 
                %As all the users are equivalent it doesn't matter which one we choose.
-PN_sequence_RX = P.Long_code(:,:,i_user_rx); % only used in receiver. defined here for speed.
+PN_sequence_RX = P.Long_code(:,i_user_rx); % only used in receiver. defined here for speed.
+
+WaveLengthTX = (P.NumberOfBits+P.codeLength)/P.codeRate*P.hadamardLength/P.nMIMO;
+WaveLengthRX = WaveLengthTX+P.ChannelLength - 1;
 
 Results = zeros(1,length(P.SNRRange)); %records the errors
 for i_frame = 1:P.NumberOfFrames
-    i_frame
+    i_frame %feedback during long simulations
     %% -------------------------------------------------------------------------
     % Coding
     tx_information_bits = randi([0 1],P.NumberOfBits,1); % Random Data
@@ -41,34 +41,33 @@ for i_frame = 1:P.NumberOfFrames
         tx_bits_ortogonal = hadamardMatrix(:,i_user_tx) * (1-2*tx_bits_split(:,i_tx_antenna)).';
         tx_bits_ortogonal=tx_bits_ortogonal(:);
         
-     
-        % Spreading match filter
+        % Spreading matched filter
         tx_bits_matched_filter= P.Long_code(:,:,i_user_tx).*tx_bits_ortogonal;
-        
+ 
         tx_symbols = tx_bits_matched_filter;
 
         %%-------------------------------------------------------------------------
         % Channel
         
-        WaveLengthTX = size(tx_signal,1);
-        WaveLengthRX = WaveLengthTX+P.ChannelLength - 1;
         tx_signal(:,i_tx_antenna) =  tx_symbols;
     end %i_tx_antenna
     
+   
+    %% -------------------------------------------------------------------------
+    % Simulation
     %% Channel
+    % (do this outside SNR-loop because conv() is slow)
+     
     himp = sqrt(1/2)* (randn(P.ChannelLength*P.nMIMO,P.nMIMO) + 1i * randn(P.ChannelLength*P.nMIMO,P.nMIMO));
     himp = himp/norm(himp); %%normalize channel taps.
     
+    %Uncomment this for debugging the MIMO:
     %himp = zeros(6,2);
     %himp(1,1) = 1;
     %himp(4,1) = 1;
     %himp(3,2) = 1;
     %himp(6,2) = 1;
     
-    %% -------------------------------------------------------------------------
-    % Simulation
-    
-    % Channel (do this outside SNR-loop because conv() is slow)
     rx_signal = zeros(WaveLengthRX, P.nMIMO);
         switch P.ChannelType
             case 'AWGN',
@@ -86,7 +85,8 @@ for i_frame = 1:P.NumberOfFrames
             otherwise,
                 disp('Channel not supported')
         end
-    noise_vector = (randn(WaveLengthRX,P.nMIMO) + 1i* randn(WaveLengthRX,P.nMIMO) ); %same noise vector for all different SNRs, to improve speed
+     %same noise vector for all different SNRs, to improve speed
+    noise_vector = (randn(WaveLengthRX,P.nMIMO) + 1i* randn(WaveLengthRX,P.nMIMO) );
     
     for i_snr = 1:length(P.SNRRange)
         
@@ -114,22 +114,17 @@ for i_frame = 1:P.NumberOfFrames
         end
         
         
-        %% Do MIMO 
-      %  rx_bits_coded = mimo_decoding((rx_virtual_antennas.'),himp, P).';
-      %  rx_bits_coded=1-2*rx_bits_coded ;
+        %% Do MIMO: 
         rx_symbols_coded = real(himp\(rx_virtual_antennas.')).';
         rx_symbols_coded=rx_symbols_coded(:);
-        %rx_bits_coded=1-2*(rx_bits_coded(:)<0);
+        
       %  sum3 = sum(rx_bits_coded ~= tx_bits_coded);
         
         
         %% conv. Decoder        
-        
-    
-        speed = 1/2;    
-        delay = convDec.TracebackDepth*log2(convDec.TrellisStructure.numInputSymbols);
-        b_hat = step(convDec, [rx_symbols_coded; zeros(1/speed*delay,1)]);
-        rx_information_bits = b_hat(delay+1:delay+length(tx_bits_tail));
+        decDelay = convDec.TracebackDepth*log2(convDec.TrellisStructure.numInputSymbols);
+        b_hat = step(convDec, [rx_symbols_coded; zeros(1/P.codeRate*decDelay,1)]);
+        rx_information_bits = b_hat(decDelay+1:decDelay+length(tx_bits_tail));
         
         
         %%-------------------------------------------------------------------------
@@ -144,9 +139,3 @@ end
 
 
 BER = Results/(P.NumberOfBits*P.NumberOfFrames);
-%BER = Results/(P.NumberOfBits);
-
-
-
-
-
