@@ -9,6 +9,15 @@ function BER = simulatorMIMO(P)
 
 hadamardMatrix = 1/sqrt(P.hadamardLength)*hadamard(P.hadamardLength);
 
+%initialize the convolutional coding
+encoderPolynominal = [753 561];
+K = 9;
+convEnc = comm.ConvolutionalEncoder('TrellisStructure', poly2trellis(P.codeLength+1,encoderPolynominal)); %terminated, put outsidew for
+convDec = comm.ViterbiDecoder('TrellisStructure', poly2trellis(K,encoderPolynominal)); 
+
+
+
+
 Results = zeros(1,length(P.SNRRange)); %records the errors
 for i_frame = 1:P.NumberOfFrames
     i_frame
@@ -17,7 +26,7 @@ for i_frame = 1:P.NumberOfFrames
     tx_information_bits = randi([0 1],P.NumberOfBits,1); % Random Data
     tx_bits_tail = [tx_information_bits; zeros(P.codeLength,1)]; % adding encoder tail
     
-    tx_bits_coded = conv_enc2(tx_bits_tail,P);  %convolutional encoding
+    tx_bits_coded = step(convEnc, tx_bits_tail);  %convolutional encoding
     tx_bits_split = reshape(tx_bits_coded,[],P.nMIMO); %split up the bitstream to the two antennas
     
     %% -------------------------------------------------------------------------
@@ -57,7 +66,7 @@ for i_frame = 1:P.NumberOfFrames
     %% -------------------------------------------------------------------------
     % Simulation
     for i_snr = 1:length(P.SNRRange)
-        i_snr
+        
         rx_signal = zeros(WaveLengthRX, P.nMIMO);
         SNRdb  = P.SNRRange(i_snr);
         SNRlin = 10^(SNRdb/10);
@@ -110,7 +119,17 @@ for i_frame = 1:P.NumberOfFrames
         
         %% conv. Decoder
         plot((rx_bits_coded ~= tx_bits_coded))
-        rx_information_bits = conv_dec2(rx_bits_coded,length(tx_bits_tail));
+        
+        rx_bits_coded=1-2*rx_bits_coded ;
+    
+        speed = 1/2;    
+        delay = convDec.TracebackDepth*log2(convDec.TrellisStructure.numInputSymbols);
+        b_hat = step(convDec, [rx_bits_coded; zeros(1/speed*delay,1)]);
+        rx_information_bits = b_hat(delay+1:delay+length(tx_bits_tail));
+
+        
+        
+        %rx_information_bits = conv_dec2(rx_bits_coded,length(tx_bits_tail));
         
         
         %%-------------------------------------------------------------------------

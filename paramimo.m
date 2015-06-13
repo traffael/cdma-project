@@ -16,7 +16,7 @@ P.codeLength = 8; % encoding (K=1+P.codeLength = 8)
 P.hadamardLength = 64; 
 P.ChannelType   = 'Multipath'; % 'AWGN', 'Fading'
 P.ChannelLength = 4;
-P.NumberOfFrames  = 1;
+P.NumberOfFrames  = 100;
 P.nMIMO = 2; %2 antennas
 P.useIS95Walsh = 0; %boolean, 1 if the standard Walsh mapping is used as
 %                   defined in the IS95 standard. 0 if
