@@ -16,7 +16,9 @@ convEnc = comm.ConvolutionalEncoder('TrellisStructure', poly2trellis(P.codeLengt
 convDec = comm.ViterbiDecoder('TrellisStructure', poly2trellis(K,encoderPolynominal)); 
 
 
-
+i_user_rx = 1; %index of the mobile user to be decoded on the RX side. 
+               %As all the users are equivalent it doesn't matter which one we choose.
+PN_sequence_RX = P.Long_code(:,:,i_user_rx); % only used in receiver. defined here for speed.
 
 Results = zeros(1,length(P.SNRRange)); %records the errors
 for i_frame = 1:P.NumberOfFrames
@@ -65,46 +67,47 @@ for i_frame = 1:P.NumberOfFrames
     
     %% -------------------------------------------------------------------------
     % Simulation
-    for i_snr = 1:length(P.SNRRange)
-        
-        rx_signal = zeros(WaveLengthRX, P.nMIMO);
-        SNRdb  = P.SNRRange(i_snr);
-        SNRlin = 10^(SNRdb/10);
-        noise  = 1/sqrt(2*SNRlin*P.hadamardLength) *(randn(WaveLengthRX,1) + 1i* randn(WaveLengthRX,1) );
-        % Channel
+    
+    % Channel (do this outside SNR-loop because conv() is slow)
+    rx_signal = zeros(WaveLengthRX, P.nMIMO);
         switch P.ChannelType
             case 'AWGN',
-                rx_signal = tx_signal + noise';
+                rx_signal = tx_signal;
             case 'Fading',
-                rx_signal = tx_signal .* h + noise;
+                rx_signal = tx_signal .* h;
             case 'Multipath'
                 for j_rx_antenna = 1:P.nMIMO
                     if j_rx_antenna == 1
-                        rx_signal(:,j_rx_antenna) = conv(tx_signal(:,1),himp(1:length(himp)/2,1))+conv(tx_signal(:,2),himp(1:length(himp)/2,2))+ noise;
+                        rx_signal(:,j_rx_antenna) = conv(tx_signal(:,1),himp(1:length(himp)/2,1))+conv(tx_signal(:,2),himp(1:length(himp)/2,2));
                     else
-                        rx_signal(:,j_rx_antenna) = conv(tx_signal(:,1),himp(length(himp)/2+1:end,1))+conv(tx_signal(:,2),himp(length(himp)/2+1:end,2))+ noise; 
+                        rx_signal(:,j_rx_antenna) = conv(tx_signal(:,1),himp(length(himp)/2+1:end,1))+conv(tx_signal(:,2),himp(length(himp)/2+1:end,2)); 
                     end;
                 end;
             otherwise,
                 disp('Channel not supported')
         end
+    noise_vector = (randn(WaveLengthRX,P.nMIMO) + 1i* randn(WaveLengthRX,P.nMIMO) ); %same noise vector for all different SNRs, to improve speed
+    
+    for i_snr = 1:length(P.SNRRange)
+        
+        SNRdb  = P.SNRRange(i_snr);
+        SNRlin = 10^(SNRdb/10);
+        noise  = 1/sqrt(2*SNRlin*P.hadamardLength) * noise_vector;
+        
+        rx_signal_with_noise = rx_signal + noise; 
 
         %%-------------------------------------------------------------------------
         % Receiver
-        i_user_rx = 1; %index of the mobile user. Will be used later when implementing multiple users.
-        
         rx_virtual_antennas=zeros(length(tx_bits_split),P.nMIMO*P.RakeFingers);
         
         %% MIMO Rake receiver:
         a = 1;
         for i_rx_antenna = 1:P.nMIMO
             for f=1:P.RakeFingers
-                rx_signal_crop=rx_signal(f:WaveLengthTX+f-1,i_rx_antenna);
-                rx_bits_despread = rx_signal_crop.*P.Long_code(:,:,i_user_rx);
-                
-                %rx_bits_demod = orthogonalMIMODemodulation(rx_bits_demult,i_user_rx);
-                rx_bits_despread = reshape(rx_bits_despread,P.hadamardLength,[]).'; %reshape to perform matrix multiplication
-                rx_virtual_antennas(:,a) = rx_bits_despread * hadamardMatrix(:,i_user_rx); 
+                rx_signal_crop=rx_signal_with_noise(f:WaveLengthTX+f-1,i_rx_antenna);
+                rx_symbols_despread = rx_signal_crop.*PN_sequence_RX;
+                rx_symbols_despread = reshape(rx_symbols_despread,P.hadamardLength,[]); %reshape to perform matrix multiplication
+                rx_virtual_antennas(:,a) = hadamardMatrix(i_user_rx, :) * rx_symbols_despread;
                 a = a+1;
             end
             
@@ -112,24 +115,21 @@ for i_frame = 1:P.NumberOfFrames
         
         
         %% Do MIMO 
-        rx_bits_coded = mimo_decoding((rx_virtual_antennas.'),himp, P).';
-
-        sum3 = sum(rx_bits_coded ~= tx_bits_coded);
+      %  rx_bits_coded = mimo_decoding((rx_virtual_antennas.'),himp, P).';
+      %  rx_bits_coded=1-2*rx_bits_coded ;
+        rx_symbols_coded = real(himp\(rx_virtual_antennas.')).';
+        rx_symbols_coded=rx_symbols_coded(:);
+        %rx_bits_coded=1-2*(rx_bits_coded(:)<0);
+      %  sum3 = sum(rx_bits_coded ~= tx_bits_coded);
         
         
-        %% conv. Decoder
-        plot((rx_bits_coded ~= tx_bits_coded))
+        %% conv. Decoder        
         
-        rx_bits_coded=1-2*rx_bits_coded ;
     
         speed = 1/2;    
         delay = convDec.TracebackDepth*log2(convDec.TrellisStructure.numInputSymbols);
-        b_hat = step(convDec, [rx_bits_coded; zeros(1/speed*delay,1)]);
+        b_hat = step(convDec, [rx_symbols_coded; zeros(1/speed*delay,1)]);
         rx_information_bits = b_hat(delay+1:delay+length(tx_bits_tail));
-
-        
-        
-        %rx_information_bits = conv_dec2(rx_bits_coded,length(tx_bits_tail));
         
         
         %%-------------------------------------------------------------------------
