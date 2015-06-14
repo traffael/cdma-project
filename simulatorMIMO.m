@@ -87,7 +87,7 @@ for i_frame = 1:P.NumberOfFrames
     PN_sequence_RX = P.Long_code(:,i_user_rx); % used in receiver. defined here for speed.
     
     for i_snr = 1:length(P.SNRRange)
-        
+        % Add noise depending on SNR
         SNRdb  = P.SNRRange(i_snr);
         SNRlin = 10^(SNRdb/10);
         noise  = 1/sqrt(2*SNRlin*P.hadamardLength) * noise_vector;

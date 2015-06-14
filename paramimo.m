@@ -24,7 +24,7 @@ P.useIS95Walsh = 0; %boolean, 1 if the standard Walsh mapping is used as
 %                   defined in the IS95 standard. 0 if
 %                   orthogonalMIMO(De)modulation function is used.
 
-P.nUsers = 32; % Number of users
+P.nUsers = 64; % Number of users
 for i_user = 1:P.nUsers
     ESN = randi([0 1],1, 32);
     P.Long_code(:,i_user) = gen_long_code(ESN,P); %PN sequence. Specific to each USER, but the SAME for both mimo
@@ -38,20 +38,26 @@ P.RakeFingers = 4;
 
 u=[1 4 8 16 32 64];
 c=[2 3 4];
-for k=1:3
-    for l=1:3
-        l
-        P.nUsers     = u(l);
-        P.ChannelLength = c(k);
-        P.RakeFingers = c(k);
+for i_chan=1:length(c)
+    i_chan
+    simlab=[];
+    for i_nuser=1:length(u)
+        i_nuser
+        P.nUsers     = u(i_nuser);
+        P.ChannelLength = c(i_chan);
+        P.RakeFingers = c(i_chan);
         
-        BER(l,:) = simulatorMIMO(P);
+        BER(i_nuser,:,i_chan) = simulatorMIMO(P);
         
-        simlab(l,:) = sprintf('%s - Length: %d - Users: %d' ,P.ChannelType,P.ChannelLength,P.CDMAUsers);
+     %   if(u(i_nuser)>9)
+            simlab{i_nuser} = sprintf('%s - Length: %d - Users: %d' ,P.ChannelType,P.ChannelLength,P.nUsers);
+      %  else
+      %      simlab(i_nuser,:) = sprintf('%s - Length: %d - Users:  %d' ,P.ChannelType,P.ChannelLength,P.nUsers);
+      %  end
     end
 
-figure(3)
-semilogy(P.SNRRange,BER,'*-')
+figure
+semilogy(P.SNRRange,BER(:,:,i_chan),'*-')
 
 xlabel('SNR','FontSize',12,'FontWeight','bold');
 ylabel('BER','FontSize',12,'FontWeight','bold');
@@ -62,4 +68,7 @@ grid minor;
 legend(simlab);
 
 end
+
+BER
+save('sim10e5')
 
