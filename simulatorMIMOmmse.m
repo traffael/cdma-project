@@ -7,8 +7,6 @@
 
 function BER = simulatorMIMO(P)
 
-assert(length(P.encoderPolynominal)==1/P.codeRate,'Error: Code rate not consistent with Polynominal length');
-
 hadamardMatrix = 1/sqrt(P.hadamardLength)*hadamard(P.hadamardLength);
 
 %initialize the convolutional coding
@@ -20,7 +18,7 @@ WaveLengthRX = WaveLengthTX+P.ChannelLength - 1;
 
 Results = zeros(1,length(P.SNRRange)); %records the errors
 for i_frame = 1:P.NumberOfFrames
-    i_frame %feedback during long simulations
+   % i_frame %feedback during long simulations
     
     tx_information_bits = randi([0 1],P.NumberOfBits,P.nUsers); % Random Data
     tx_bits_tail = [tx_information_bits; zeros(P.codeLength,P.nUsers)]; % adding encoder tail
@@ -53,9 +51,8 @@ for i_frame = 1:P.NumberOfFrames
     % Simulation
     %% Channel
     % (do this outside SNR-loop because conv() is slow)
-    
     himp = sqrt(1/2)* (randn(P.ChannelLength*P.nMIMO,P.nMIMO) + 1i * randn(P.ChannelLength*P.nMIMO,P.nMIMO));
-    
+
     rx_signal = zeros(WaveLengthRX, P.nMIMO);
     switch P.ChannelType
         case 'AWGN',
@@ -75,9 +72,8 @@ for i_frame = 1:P.NumberOfFrames
     end
     %same noise vector for all different SNRs, to improve speed
     noise_vector = (randn(WaveLengthRX,P.nMIMO) + 1i* randn(WaveLengthRX,P.nMIMO) );
-       
-    %calculate the filter matrix for the MIMO outside this loop:
-    G = inv(himp'*himp)*himp';
+    
+    
     
     i_user_rx = randi(P.nUsers); %index of the mobile user to be decoded on the RX side.
     %As all the users are equivalent it doesn't matter which one we choose.
@@ -109,10 +105,10 @@ for i_frame = 1:P.NumberOfFrames
         
         
         %% Do MIMO:
+        %calculate the filter matrix for the MIMO outside this loop:
+        G = inv(himp'*himp + P.nMIMO/SNRlin*eye(P.nMIMO))*himp';
         rx_symbols_coded = real(G * (rx_virtual_antennas.')).';
         rx_symbols_coded=rx_symbols_coded(:);
-        
-        %  sum3 = sum(rx_bits_coded ~= tx_bits_coded);
         
         
         %% conv. Decoder

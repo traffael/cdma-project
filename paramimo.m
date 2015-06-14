@@ -18,7 +18,7 @@ P.encoderPolynominal = [753 561];
 P.hadamardLength = 64; 
 P.ChannelType   = 'Multipath'; % 'AWGN', 'Fading'
 P.ChannelLength = 4;
-P.NumberOfFrames  = 1e5;
+P.NumberOfFrames  = 1e3;
 P.nMIMO = 2; %2 antennas
 P.useIS95Walsh = 0; %boolean, 1 if the standard Walsh mapping is used as
 %                   defined in the IS95 standard. 0 if
@@ -30,24 +30,24 @@ for i_user = 1:P.nUsers
     P.Long_code(:,i_user) = gen_long_code(ESN,P); %PN sequence. Specific to each USER, but the SAME for both mimo
 end 
 
-P.SNRRange = -25:2:15; % SNR Range to simulate in dB
+P.SNRRange = -35:2:5; % SNR Range to simulate in dB
 
 P.ReceiverType  = 'Rake';
 
 P.RakeFingers = 4;
 
-u=[1 4 8 16 32 64];
-c=[2 3 4];
-for i_chan=1:length(c)
-    i_chan
+u=[1 8];
+r=[ 3 ];
+for i_rakefingers=1:length(r)
+    i_rakefingers
     simlab=[];
     for i_nuser=1:length(u)
         i_nuser
         P.nUsers     = u(i_nuser);
-        P.ChannelLength = c(i_chan);
-        P.RakeFingers = c(i_chan);
+        P.ChannelLength = r(i_rakefingers);
+        P.RakeFingers = r(i_rakefingers);
         
-        BER(i_nuser,:,i_chan) = simulatorMIMO(P);
+        BER(i_nuser,:,i_rakefingers) = simulatorMIMO(P);
         
      %   if(u(i_nuser)>9)
             simlab{i_nuser} = sprintf('%s - Length: %d - Users: %d' ,P.ChannelType,P.ChannelLength,P.nUsers);
@@ -57,7 +57,7 @@ for i_chan=1:length(c)
     end
 
 figure
-semilogy(P.SNRRange,BER(:,:,i_chan),'*-')
+semilogy(P.SNRRange,BER(:,:,i_rakefingers),'*-')
 
 xlabel('SNR','FontSize',12,'FontWeight','bold');
 ylabel('BER','FontSize',12,'FontWeight','bold');

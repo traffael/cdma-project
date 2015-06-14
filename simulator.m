@@ -7,6 +7,8 @@
 
 function BER = simulator(P)
 
+assert(length(P.encoderPolynominal)==1/P.codeRate,'Error: Code rate not consistent with Polynominal length');
+
 hadamardMatrix = 1/sqrt(P.hadamardLength)*hadamard(P.hadamardLength);
 
 %initialize the convolutional coding
@@ -18,7 +20,7 @@ WaveLengthRX = WaveLengthTX+P.ChannelLength - 1;
 
 Results = zeros(1,length(P.SNRRange)); %records the errors
 for i_frame = 1:P.NumberOfFrames
-    i_frame %feedback during long simulations
+    %i_frame %feedback during long simulations
     
     tx_information_bits = randi([0 1],P.NumberOfBits,P.nUsers); % Random Data
     tx_bits_tail = [tx_information_bits; zeros(P.codeLength,P.nUsers)]; % adding encoder tail
@@ -39,7 +41,8 @@ for i_frame = 1:P.NumberOfFrames
             tx_symbols_ortogonal = repmat(tx_symbols_ortogonal.',[4 1]);
             tx_symbols_ortogonal = tx_symbols_ortogonal(:);
         else
-            tx_symbols_ortogonal = orthogonalMIMOModulation(tx_bits_coded.',i_user_tx);
+            tx_symbols_ortogonal = hadamardMatrix(:,i_user_tx) * (1-2*tx_bits_coded).';
+            tx_symbols_ortogonal = tx_symbols_ortogonal(:);
         end
         
         
@@ -60,7 +63,6 @@ for i_frame = 1:P.NumberOfFrames
     % (do this outside SNR-loop because conv() is slow)
     
     himp = sqrt(1/2)* (randn(P.ChannelLength,1) + 1i * randn(P.ChannelLength,1));
-    himp = himp/norm(himp); %%normalize channel taps. TODO
     
     rx_signal = zeros(WaveLengthRX, 1);
     switch P.ChannelType
@@ -124,7 +126,7 @@ for i_frame = 1:P.NumberOfFrames
             rx_symbols_coded = 1-2*str2num(rx_symbols_coded(:)); %the mapping to BPSK symbols is required for the conv. Decoder.
         else
             rx_symbols_despread = reshape(rx_symbols_despread,P.hadamardLength,[]); %reshape to perform matrix multiplication
-            rx_symbols_coded = hadamardMatrix(i_user_rx, :) * rx_symbols_despread;
+            rx_symbols_coded = (hadamardMatrix(i_user_rx, :) * rx_symbols_despread).';
         end
         sum3 = sum((rx_symbols_coded<0) ~= tx_bits_coded(:));
         %demodwaveform1 = x_hat;
