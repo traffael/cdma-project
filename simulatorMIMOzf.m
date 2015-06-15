@@ -5,7 +5,7 @@
 % Telecommunications Circuits Laboratory
 % EPFL
 
-function BER = simulatorMIMO(P)
+function BER = simulatorMIMOzf(P)
 
 assert(length(P.encoderPolynominal)==1/P.codeRate,'Error: Code rate not consistent with Polynominal length');
 
@@ -18,9 +18,11 @@ convDec = comm.ViterbiDecoder('TrellisStructure', poly2trellis(P.codeLength+1,P.
 WaveLengthTX = (P.NumberOfBits+P.codeLength)/P.codeRate*P.hadamardLength/P.nMIMO;
 WaveLengthRX = WaveLengthTX+P.ChannelLength - 1;
 
+PN_sequence = genbarker(WaveLengthTX);
+
 Results = zeros(1,length(P.SNRRange)); %records the errors
 for i_frame = 1:P.NumberOfFrames
-    i_frame %feedback during long simulations
+   % i_frame %feedback during long simulations
     
     tx_information_bits = randi([0 1],P.NumberOfBits,P.nUsers); % Random Data
     tx_bits_tail = [tx_information_bits; zeros(P.codeLength,P.nUsers)]; % adding encoder tail
@@ -40,7 +42,7 @@ for i_frame = 1:P.NumberOfFrames
             tx_symbols_ortogonal = tx_symbols_ortogonal(:);
             
             % Spreading matched filter
-            tx_symbols_matched_filter = P.Long_code(:,1).*tx_symbols_ortogonal;%P.Long_code(:,i_user_tx).*tx_symbols_ortogonal;
+            tx_symbols_matched_filter = PN_sequence.*tx_symbols_ortogonal;%P.Long_code(:,i_user_tx).*tx_symbols_ortogonal;
             
             tx_symbols = tx_symbols_matched_filter;
             
@@ -77,11 +79,12 @@ for i_frame = 1:P.NumberOfFrames
     noise_vector = (randn(WaveLengthRX,P.nMIMO) + 1i* randn(WaveLengthRX,P.nMIMO) );
        
     %calculate the filter matrix for the MIMO outside this loop:
-    G = inv(himp'*himp)*himp';
+    H_crop = himp(1:P.nMIMO*P.RakeFingers,:); %only chose the first channel taps if nFingers < nTaps.
+    G = inv(H_crop'*H_crop)*H_crop';
     
     i_user_rx = randi(P.nUsers); %index of the mobile user to be decoded on the RX side.
     %As all the users are equivalent it doesn't matter which one we choose.
-    PN_sequence_RX = P.Long_code(:,i_user_rx); % used in receiver. defined here for speed.
+    PN_sequence_RX = PN_sequence; % used in receiver. defined here for speed.
     
     for i_snr = 1:length(P.SNRRange)
         % Add noise depending on SNR
@@ -129,6 +132,7 @@ for i_frame = 1:P.NumberOfFrames
     end
 end
 
-
-
 BER = Results/(P.NumberOfBits*P.NumberOfFrames);
+
+end
+
