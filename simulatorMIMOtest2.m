@@ -5,7 +5,7 @@
 % Telecommunications Circuits Laboratory
 % EPFL
 
-function BER = simulatorMIMO(P)
+function BER = simulatorMIMOtest(P)
 
 assert(length(P.encoderPolynominal)==1/P.codeRate,'Error: Code rate not consistent with Polynominal length');
 
@@ -17,6 +17,8 @@ convDec = comm.ViterbiDecoder('TrellisStructure', poly2trellis(P.codeLength+1,P.
 
 WaveLengthTX = (P.NumberOfBits+P.codeLength)/P.codeRate*P.hadamardLength/P.nMIMO;
 WaveLengthRX = WaveLengthTX+P.ChannelLength - 1;
+
+PN_sequence = ones(WaveLengthTX/64,1);
 
 Results = zeros(1,length(P.SNRRange)); %records the errors
 for i_frame = 1:P.NumberOfFrames
@@ -35,14 +37,15 @@ for i_frame = 1:P.NumberOfFrames
         
         %% divide the information bits to the two antennas and apply modulation & spreading separately
         for i_tx_antenna = 1:P.nMIMO
+            
             % Orthogonal modulation
-            tx_symbols_ortogonal = hadamardMatrix(:,i_user_tx) * (1-2*tx_bits_split(:,i_tx_antenna)).';
+            tx_symbols_ortogonal = hadamardMatrix(:,i_user_tx) * (PN_sequence.*(1-2*tx_bits_split(:,i_tx_antenna))).';
             tx_symbols_ortogonal = tx_symbols_ortogonal(:);
             
             % Spreading matched filter
-            tx_symbols_matched_filter = P.Long_code(:,1).*tx_symbols_ortogonal;%P.Long_code(:,i_user_tx).*tx_symbols_ortogonal;
+            %tx_symbols_matched_filter = PN_sequence.*tx_symbols_ortogonal;%P.Long_code(:,i_user_tx).*tx_symbols_ortogonal;
             
-            tx_symbols = tx_symbols_matched_filter;
+            tx_symbols = tx_symbols_ortogonal;
             
             % add up all the signals of the different users for each antenna.
             tx_signal(:,i_tx_antenna) = tx_signal(:,i_tx_antenna) + tx_symbols;
@@ -81,7 +84,7 @@ for i_frame = 1:P.NumberOfFrames
     
     i_user_rx = randi(P.nUsers); %index of the mobile user to be decoded on the RX side.
     %As all the users are equivalent it doesn't matter which one we choose.
-    PN_sequence_RX = P.Long_code(:,i_user_rx); % used in receiver. defined here for speed.
+    PN_sequence_RX = PN_sequence; % used in receiver. defined here for speed.
     
     for i_snr = 1:length(P.SNRRange)
         % Add noise depending on SNR
@@ -100,9 +103,9 @@ for i_frame = 1:P.NumberOfFrames
         for i_rx_antenna = 1:P.nMIMO
             for f=1:P.RakeFingers
                 rx_signal_crop=rx_signal_with_noise(f:WaveLengthTX+f-1,i_rx_antenna);
-                rx_symbols_despread = rx_signal_crop.*PN_sequence_RX;
+                rx_symbols_despread = rx_signal_crop;%
                 rx_symbols_despread = reshape(rx_symbols_despread,P.hadamardLength,[]); %reshape to perform matrix multiplication
-                rx_virtual_antennas(:,a) = hadamardMatrix(i_user_rx, :) * rx_symbols_despread;
+                rx_virtual_antennas(:,a) = (hadamardMatrix(i_user_rx, :) * rx_symbols_despread).'.*PN_sequence_RX;
                 a = a+1;
             end
         end
@@ -132,3 +135,15 @@ end
 
 
 BER = Results/(P.NumberOfBits*P.NumberOfFrames);
+
+end
+
+
+function seq = genbarker(len)
+    BarkerSeq = [+1 +1 +1 +1 +1 -1 -1 +1 +1 -1 +1 -1 +1];
+
+    factor = ceil(len/length(BarkerSeq));
+    b = repmat(BarkerSeq,1,factor);
+    b = BarkerSeq.'*ones(1,factor);
+    seq = b(1:len).';
+end

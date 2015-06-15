@@ -16,6 +16,8 @@ convDec = comm.ViterbiDecoder('TrellisStructure', poly2trellis(P.codeLength+1,P.
 WaveLengthTX = (P.NumberOfBits+P.codeLength)/P.codeRate*P.hadamardLength/P.nMIMO;
 WaveLengthRX = WaveLengthTX+P.ChannelLength - 1;
 
+PN_sequence = genbarker(WaveLengthTX);
+
 Results = zeros(1,length(P.SNRRange)); %records the errors
 for i_frame = 1:P.NumberOfFrames
    % i_frame %feedback during long simulations
@@ -38,7 +40,7 @@ for i_frame = 1:P.NumberOfFrames
             tx_symbols_ortogonal = tx_symbols_ortogonal(:);
             
             % Spreading matched filter
-            tx_symbols_matched_filter = P.Long_code(:,i_user_tx).*tx_symbols_ortogonal;
+            tx_symbols_matched_filter = PN_sequence.*tx_symbols_ortogonal;%P.Long_code(:,i_user_tx).*tx_symbols_ortogonal;
             
             tx_symbols = tx_symbols_matched_filter;
             
@@ -77,7 +79,7 @@ for i_frame = 1:P.NumberOfFrames
     
     i_user_rx = randi(P.nUsers); %index of the mobile user to be decoded on the RX side.
     %As all the users are equivalent it doesn't matter which one we choose.
-    PN_sequence_RX = P.Long_code(:,i_user_rx); % used in receiver. defined here for speed.
+    PN_sequence_RX = PN_sequence ;%  P.Long_code(:,i_user_rx); % used in receiver. defined here for speed.
     
     for i_snr = 1:length(P.SNRRange)
         % Add noise depending on SNR
@@ -128,3 +130,15 @@ end
 
 
 BER = Results/(P.NumberOfBits*P.NumberOfFrames);
+
+end
+
+
+function seq = genbarker(len)
+    BarkerSeq = [+1 +1 +1 +1 +1 -1 -1 +1 +1 -1 +1 -1 +1];
+
+    factor = ceil(len/length(BarkerSeq));
+    b = repmat(BarkerSeq,1,factor);
+    b = BarkerSeq.'*ones(1,factor);
+    seq = b(1:len).';
+end

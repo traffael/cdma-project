@@ -6,6 +6,7 @@
 % EPFL
 
 % Parameters
+
 P=[];
 P.NumberOfBits      = 184;
 
@@ -24,11 +25,11 @@ P.useIS95Walsh = 0; %boolean, 1 if the standard Walsh mapping is used as
 %                   defined in the IS95 standard. 0 if
 %                   orthogonalMIMO(De)modulation function is used.
 
-P.nUsers = 64; % Number of users
-for i_user = 1:P.nUsers
-    ESN = randi([0 1],1, 32);
-    P.Long_code(:,i_user) = gen_long_code(ESN,P); %PN sequence. Specific to each USER, but the SAME for both mimo
-end 
+% P.nUsers = 64; % Number of users
+% for i_user = 1:1 %P.nUsers
+%     ESN = randi([0 1],1, 32);
+%     P.Long_code(:,i_user) = gen_long_code(ESN,P); %PN sequence. Specific to each USER, but the SAME for both mimo
+% end 
 
 P.SNRRange = -35:2:5; % SNR Range to simulate in dB
 
@@ -38,6 +39,74 @@ P.RakeFingers = 4;
 
 u=[1 8];
 r=[ 3 ];
+% for i_rakefingers=1:length(r)
+%     i_rakefingers
+%     simlab=[];
+%     for i_nuser=1:length(u)
+%         i_nuser
+%         P.nUsers     = u(i_nuser);
+%         P.ChannelLength = r(i_rakefingers);
+%         P.RakeFingers = r(i_rakefingers);
+%         
+%         BERmimo(i_nuser,:,i_rakefingers) = simulatorMIMO(P);
+%         
+%      %   if(u(i_nuser)>9)
+%             simlab{i_nuser} = sprintf('%s - Length: %d - Users: %d' ,P.ChannelType,P.ChannelLength,P.nUsers);
+%       %  else
+%       %      simlab(i_nuser,:) = sprintf('%s - Length: %d - Users:  %d' ,P.ChannelType,P.ChannelLength,P.nUsers);
+%       %  end
+%     end
+% 
+% figure
+% semilogy(P.SNRRange,BERmimo(:,:,i_rakefingers),'*-')
+% 
+% xlabel('SNR','FontSize',12,'FontWeight','bold');
+% ylabel('BER','FontSize',12,'FontWeight','bold');
+% xlim([min(P.SNRRange) max(P.SNRRange)]);
+% ylim([1e-6, 1e0]);
+% title('MIMO IS95 simulation with zero-forcing')
+% grid minor;
+% legend(simlab);
+% 
+% end
+% 
+% BERmimo
+% 
+% % =============================================================== SVD
+% for i_rakefingers=1:length(r)
+%     i_rakefingers
+%     simlab=[];
+%     for i_nuser=1:length(u)
+%         i_nuser
+%         P.nUsers     = u(i_nuser);
+%         P.ChannelLength = r(i_rakefingers);
+%         P.RakeFingers = r(i_rakefingers);
+%         
+%         BERsvd(i_nuser,:,i_rakefingers) = simulatorMIMOsvd(P);
+%         
+%      %   if(u(i_nuser)>9)
+%             simlab{i_nuser} = sprintf('%s - Length: %d - Users: %d' ,P.ChannelType,P.ChannelLength,P.nUsers);
+%       %  else
+%       %      simlab(i_nuser,:) = sprintf('%s - Length: %d - Users:  %d' ,P.ChannelType,P.ChannelLength,P.nUsers);
+%       %  end
+%     end
+% 
+% figure
+% semilogy(P.SNRRange,BERsvd(:,:,i_rakefingers),'*-')
+% 
+% xlabel('SNR','FontSize',12,'FontWeight','bold');
+% ylabel('BER','FontSize',12,'FontWeight','bold');
+% xlim([min(P.SNRRange) max(P.SNRRange)]);
+% ylim([1e-6, 1e0]);
+% title('MIMO IS95 simulation with singular value decomposition')
+% grid minor;
+% legend(simlab);
+% 
+% end
+% 
+% BERsvd
+
+% =====================================================================
 for i_rakefingers=1:length(r)
     i_rakefingers
     simlab=[];
@@ -47,28 +116,61 @@ for i_rakefingers=1:length(r)
         P.ChannelLength = r(i_rakefingers);
         P.RakeFingers = r(i_rakefingers);
         
-        BER(i_nuser,:,i_rakefingers) = simulatorMIMO(P);
+        BERmmsenew(i_nuser,:,i_rakefingers) = simulatorMIMOmmse(P);
         
-     %   if(u(i_nuser)>9)
             simlab{i_nuser} = sprintf('%s - Length: %d - Users: %d' ,P.ChannelType,P.ChannelLength,P.nUsers);
-      %  else
-      %      simlab(i_nuser,:) = sprintf('%s - Length: %d - Users:  %d' ,P.ChannelType,P.ChannelLength,P.nUsers);
-      %  end
+     
     end
 
 figure
-semilogy(P.SNRRange,BER(:,:,i_rakefingers),'*-')
+semilogy(P.SNRRange,BERmmsenew(:,:,i_rakefingers),'*-')
 
 xlabel('SNR','FontSize',12,'FontWeight','bold');
 ylabel('BER','FontSize',12,'FontWeight','bold');
 xlim([min(P.SNRRange) max(P.SNRRange)]);
 ylim([1e-6, 1e0]);
-
+title('MIMO IS95 simulation with MMSE')
 grid minor;
 legend(simlab);
 
 end
 
-BER
+BERmmsenew
+
 save('sim10e5')
 
+
+% 
+% 
+%         P.nUsers     = 32;
+%         P.ChannelLength = 3;
+%         P.RakeFingers = 3;
+%         
+%         BERtest3PNafteradd(1,:) = simulatorMIMOtest_pnafteradd(P);
+%         
+%             simlab{1} = sprintf('%s - Length: %d - Users: %d' ,P.ChannelType,P.ChannelLength,P.nUsers);
+%      
+%     
+% 
+%     figure(6)
+%     hold on
+% 
+%     semilogy(P.SNRRange,BERtest3PNafteradd,'*-')
+% 
+%     xlabel('SNR','FontSize',12,'FontWeight','bold');
+%     ylabel('BER','FontSize',12,'FontWeight','bold');
+%     xlim([min(P.SNRRange) max(P.SNRRange)]);
+%     ylim([1e-6, 1e0]);
+%     title('MIMO IS95 simulation with MMSE')
+%     grid minor;
+%     legend(simlab);
+% 
+%     hold on
+% 
+% BERtest3PNafteradd
+% 
+% save('sim10e5')
+% 
+% 
+% 
+% 
