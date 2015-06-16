@@ -1,9 +1,4 @@
-% Wireless Receivers II - Assignment 1:
-%
-% Direct Sequence Spread Spectrum Simulation Framework
-%
-% Telecommunications Circuits Laboratory
-% EPFL
+%% Simulator for the non-MIMO system
 
 function BER = simulator(P)
 
@@ -44,11 +39,7 @@ for i_frame = 1:P.NumberOfFrames
             tx_symbols_ortogonal = hadamardMatrix(:,i_user_tx) * (1-2*tx_bits_coded).';
             tx_symbols_ortogonal = tx_symbols_ortogonal(:);
         end
-        
-        
-        %hadamardMatrix(:,i_user_tx) * (1-2*tx_bits_split(:,i_tx_antenna)).';
-        %tx_symbols_ortogonal = tx_symbols_ortogonal(:);
-        
+                
         % Spreading matched filter
         tx_symbols_matched_filter = P.Long_code(:,i_user_tx).*tx_symbols_ortogonal;
         
@@ -100,7 +91,6 @@ for i_frame = 1:P.NumberOfFrames
                 rx_symbols_despread=zeros(WaveLengthTX,1);
                 for f=1:P.RakeFingers
                     rx_signal_crop=rx_signal_with_noise(f:WaveLengthTX+f-1);
-                    %yresh=(reshape(ycrop,length(P.Sequence),WaveLengthTX)).';
                     rx_symbols_despread= rx_symbols_despread+(PN_sequence_RX.*rx_signal_crop)*conj(himp(f));
                 end
             otherwise,
@@ -120,7 +110,7 @@ for i_frame = 1:P.NumberOfFrames
             % Demodulation
             rx_symbols_demod = reshape(rx_symbols_demult,64,[]).'; %reshape to perform matrix multiplication
             rx_mod_indexes = rx_symbols_demod * hadamardMatrix;
-            [~,rx_mod_indexes] = max(rx_mod_indexes,[],2);
+            [~,rx_mod_indexes] = max(rx_mod_indexes,[],2); %Find the most probable index of the Hadamard matrix coloumns.
             rx_mod_indexes=rx_mod_indexes-1;
             rx_symbols_coded = fliplr(dec2bin(rx_mod_indexes,6))';
             rx_symbols_coded = 1-2*str2num(rx_symbols_coded(:)); %the mapping to BPSK symbols is required for the conv. Decoder.
